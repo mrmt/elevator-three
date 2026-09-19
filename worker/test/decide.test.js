@@ -36,6 +36,20 @@ test('質問文は表から組み立て、選択肢だけをクライアント�
   assert.deepEqual(q.shift, { type: 'noul', instructions: KINDS.harmony.shift.instructions });
 });
 
+test('音色・並び・平行移動の幅・ペダルの質問を通す (D-17)', () => {
+  const harm = { kind: 'harmony', state: {}, ask: { prog: { p0: 'i', p1: 'iv' }, tight: true, chop: true, noise: true,
+    shift: true, step: { home: 'back home', '+5': 'up a fourth' }, pedal: true } };
+  assert.deepEqual(parseRequest(JSON.stringify(harm)), harm);
+  const phr = { kind: 'phrase', state: {}, ask: { event: { none: 'n', sweep: 's' }, ep: true, mutate: true,
+    lead: { sawtooth: 'saw', square: 'square' }, kick: { skip: 's', push: 'p' } } };
+  assert.deepEqual(parseRequest(JSON.stringify(phr)), phr);
+  const q = buildQuestions(phr);
+  assert.equal(q.kick.instructions, KINDS.phrase.kick.instructions);
+  assert.deepEqual(q.mutate, { type: 'noul', instructions: KINDS.phrase.mutate.instructions });
+  // noul の問いに選択肢は付けられない
+  assert.throws(() => parseRequest(JSON.stringify({ ...phr, ask: { ep: { a: 'x', b: 'y' } } })), BadRequest);
+});
+
 test('答えから確率と confidence だけを取る', () => {
   const ask = { next: { a: 'x', b: 'y' }, dub: true };
   const got = pickAnswers(ask, {

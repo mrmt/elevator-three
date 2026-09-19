@@ -46,6 +46,36 @@ test('jev のスライダーと monitor の表示がある', async ({ page }) =>
   await expect(page.locator('#scenename')).not.toContainText('(edit)');
 });
 
+test('temperature のスライダーがあり、動かしても (edit) を付けない (D-18)', async ({ page }) => {
+  await page.goto('/index.html');
+  const s = page.locator('#s_temp');
+  await expect(s).toBeVisible();
+  await expect(s).toHaveValue('1');
+  await expect(s).toHaveAttribute('max', '2');
+  // 判断の任せ方なので (edit) を付けない
+  await s.fill('0.5');
+  await expect(page.locator('#scenename')).not.toContainText('(edit)');
+});
+
+test('temperature 0 では Jev のいちばん確率の高い答えだけを取る (D-18)', async ({ page }) => {
+  test.setTimeout(60000);
+  await fakeWorker(page, ({ kind, ask }) => {
+    if (kind !== 'phrase') return {};
+    const probs = Object.fromEntries(Object.keys(ask.event).map(k => [k, 0]));
+    probs.kickdrop = .6; probs.sweep = .4;
+    return { event: { probs, confidence: .2 }, ...(ask.dub ? { dub: { p: .45, confidence: null } } : {}) };
+  });
+  await start(page);
+  await page.locator('#s_temp').fill('0');
+  const out = t => page.locator('#jevlog .o', { hasText: t });
+  await expect(out('event: kick out').first()).toBeVisible({ timeout: 40000 });
+  await expect.poll(() => out('event: kick out').count(), { timeout: 40000 }).toBeGreaterThanOrEqual(3);
+  await expect(out('event: filter sweep')).toHaveCount(0);
+  // 真偽の問いも 0.5 未満なら起こさない
+  await expect(out('no dub (p=0%)').first()).toBeVisible({ timeout: 40000 });
+  await expect(out(/^dub at bar/)).toHaveCount(0);
+});
+
 test('イベントは Jev の答えどおりに起きる', async ({ page }) => {
   test.setTimeout(60000);
   const seen = await fakeWorker(page, ({ kind, ask }) =>
@@ -134,6 +164,57 @@ test('リフは Jev が選んだ候補の旋律で鳴る', async ({ page }) => {
   await expect.poll(() => want !== null && played.includes(want), { timeout: 30000 }).toBe(true);
   // ログには選んだ候補の旋律まで出す
   await expect(page.locator('#jevlog')).toContainText(want);
+});
+
+test('行き先のシーンの音色は Jev の答えどおりになる (D-17)', async ({ page }) => {
+  test.setTimeout(90000);
+  const yes = { p: 1, confidence: 0.9 };
+  const seen = await fakeWorker(page, ({ kind, ask }) => {
+    if (kind === 'scene') return { mode: only(ask.mode, 'break') };
+    if (kind === 'harmony' && ask.prog) return { tight: yes, noise: yes, ...(ask.chop ? { chop: yes } : {}) };
+    return {};
+  });
+  await start(page, '?scenebars=16');
+  const first = await page.locator('#scenename').textContent();
+  await expect(page.locator('#scenename')).not.toHaveText(first, { timeout: 40000 });
+  const req = seen.find(b => b.kind === 'harmony' && b.ask.prog);
+  expect(req.ask.tight).toBe(true);
+  expect(req.ask.noise).toBe(true);
+  await expect(page.locator('#pchord')).toContainText('noise');
+  await expect(page.locator('#jevlog .o', { hasText: 'bass: tight (p=100%)' }).first()).toBeVisible();
+  await expect(page.locator('#jevlog .o', { hasText: 'industrial noise on (p=100%)' }).first()).toBeVisible();
+});
+
+test('リードの音色・キックの変形・並びの変異は Jev の答えどおりになる (D-17)', async ({ page }) => {
+  test.setTimeout(90000);
+  const seen = await fakeWorker(page, ({ kind, ask }) => kind !== 'phrase' ? {} : {
+    lead: only(ask.lead, 'square'),
+    mutate: { p: 1, confidence: 0.9 },
+    ...(ask.kick ? { kick: only(ask.kick, 'push') } : {}),
+  });
+  await start(page);
+  const out = t => page.locator('#jevlog .o', { hasText: t }).first();
+  await expect(out('lead timbre: square')).toBeVisible({ timeout: 40000 });
+  await expect(out(/pattern mutates at bar \d+/)).toBeVisible({ timeout: 40000 });
+  await expect(out('kick bends (push)')).toBeVisible({ timeout: 40000 });
+  // キックの変形は8小節の終わりに使うので、その3小節前の節目の回だけ聞く
+  for (const b of seen.filter(b => b.kind === 'phrase' && b.ask.kick)) expect((b.state.bar + 2) % 8).toBe(4);
+  // Jev が square 以外を選ぶことはない
+  await expect(page.locator('#jevlog .o', { hasText: /lead timbre: (sawtooth|triangle|pulse)/ })).toHaveCount(0);
+});
+
+test('平行移動の幅とペダルは Jev の答えどおりになる (D-17)', async ({ page }) => {
+  test.setTimeout(90000);
+  const seen = await fakeWorker(page, ({ kind, ask }) => kind === 'harmony' && ask.shift
+    ? { shift: { p: 1, confidence: 0.9 }, step: only(ask.step, '+5'), pedal: { p: 1, confidence: 0.9 } } : {});
+  await start(page);
+  await page.locator('#s_shift').fill('1');
+  const out = t => page.locator('#jevlog .o', { hasText: t }).first();
+  await expect(out('key shifts up a fourth')).toBeVisible({ timeout: 60000 });
+  await expect(out(/bass holds a pedal at bar \d+/)).toBeVisible({ timeout: 60000 });
+  const req = seen.find(b => b.kind === 'harmony' && b.ask.shift);
+  expect(req.ask.pedal).toBe(true);
+  expect(Object.keys(req.ask.step)).toContain('+5');
 });
 
 test('遅れて届いた答えは捨て、手元の判断で進む', async ({ page }) => {

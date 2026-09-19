@@ -85,9 +85,9 @@ Jev は音を聴けないので、いまの状態と「いままで何が起き�
 | name | kind | 問い合わせる小節 | 使う場所 |
 | --- | --- | --- | --- |
 | scene | scene | 遷移を始めうる最初の小節の8小節前 | `startTransition()` |
-| harm | harmony | 遷移を始めたとき | `enterScene()` |
-| phrase | phrase | 4小節の節目の2小節前 | `maybeEvent()` / `nextPhrase()` / `planDub()` |
-| shift | harmony | 8小節の節目の2小節前 | 平行移動の転調 / `nextPhrase()` の lush |
+| harm | harmony | 遷移を始めたとき | `enterScene()` (キー・進行、D-17 の音色) |
+| phrase | phrase | 4小節の節目の2小節前 | `maybeEvent()` / `nextPhrase()` / `planDub()`、D-17 の lead / mutate / kick / ep |
+| shift | harmony | 8小節の節目の2小節前 | 平行移動の転調 / `nextPhrase()` の lush、D-17 の step / pedal |
 | riff | riff | `planSpark()` が新しい旋律を引いたとき | 食いを置く小節の前に差し替える |
 
 回数は、BPM 125 でおよそ毎分10〜15回になる (phrase が4小節ごと、shift が8小節ごと、ほかはたまに)。
@@ -106,6 +106,7 @@ Jev は音を聴けないので、いまの状態と「いままで何が起き�
   応答を待つ間が要るので、Jev に任せる回は必ず3小節先に置く。候補の1つめを仕込んでおき、届いたら差し替える。
   覚えた形の使い回しと応答 (two:D-75) は選ばせない
 - 手で選んだシーン (`enterScene(…, {manual:true})`) には Jev の答えを使わない
+- D-17 で、音色・並び・平行移動の幅・ペダルも足した
 
 ### D-9. monitor に Jev の状態を出す (2026-09-19)
 
@@ -234,6 +235,45 @@ JEV セクションの強調の行は、文字色が result と同じ白にな�
 
 JEV セクションの JSON から `history` を外した。送った state のうち履歴が大半を占め、1件が長くなりすぎるため。
 表示だけで、Jev に送る state には従来どおり含む。
+
+### D-17. 残りの構造的な判断も Jev に任せる (2026-09-19)
+
+シーン〜数小節単位の判断のうち、手元の乱数で決めていた9つを Jev に移した。**問い合わせの回数は増やさず**、
+既存の harm / phrase / shift の ask に質問を足す。使い方は D-5 と同じで、jev の割合だけ Jev から引き、
+残りと答えが無いときは従来の手元の確率で引く。
+
+| 判断 | 問い合わせ (kind / id / 型) | 使う場所 | 手元の確率 |
+| --- | --- | --- | --- |
+| ベースの音色 (`bassTight`) | harm (harmony) / `tight` / noul | `enterScene()` | .5 |
+| コードの連打 (`padChop`) | harm (harmony) / `chop` / noul。`chop` が 0 のシーンには聞かない | `enterScene()` | シーンの `chop` |
+| インダストリアル・ノイズ (`noiseOn`) | harm (harmony) / `noise` / noul。左右の周期の配置は手元 | `rollNoise()` | `NOISE_P` |
+| ep の差し込み (`epGuest`) | phrase / `ep` / noul。フレーズ型を聞く回で、jazz 回路以外 | `nextPhrase()` | .18 |
+| リードの音色 (`leadType`) | phrase / `lead` / choice (sawtooth / square / triangle / pulse)。毎回 | `regenerate()`。差し替えるかどうか (毎小節 .25) は手元 | 鋸波5割、ほか5割 |
+| 並びの再抽選 | phrase / `mutate` / noul。mutate が 0 なら聞かない | `regenerate()` | 毎小節 `mutate*.5` |
+| キックの変形 (`kickVariant`) | phrase / `kick` / choice (skip / push / double / ghost)。`at%8===4` の回だけ | `buildBar()` の8小節の終わり。ミックスの2本目には使わない | 一様 |
+| 平行移動の幅 | shift (harmony) / `step` / choice (`home`、-4〜+7 の各段) | `onBar()` の転調 | 戻す5割、`SHIFT_STEPS` から |
+| ペダル | shift (harmony) / `pedal` / noul | `onBar()` の和音の変わり目 | 変わり目ごとに `shift*.5` |
+
+- 毎小節引く判断 (lead / mutate / kick / pedal) のため、届いた答えを次の答えまで `jevHold` に持つ
+  (phrase は4小節、shift は8小節)。`jevHeld(name)` で取り出す。シーンに入ったら捨てる
+- mutate の Jev の p は「この4小節のうちに並びが変わる確率」とし、小節あたり `1-(1-p)^(1/4)` に直して引く。
+  mutate と pedal には、shift / lush と同じくスライダーの値を 0.5 で割った倍率 (上限1) を掛ける (D-5)
+- JEV セクションには `bass: tight`、`industrial noise on`、`lead timbre: square at bar 20`、`kick bends (push) at bar 23`、
+  `key shifts up a fourth` などを書く。mutate と pedal は毎小節引くので、当たったときだけ書く
+- 変えなかったもの: 音声合成の乱数、1音・1ステップ単位の揺らぎ、Jev の分布から引く乱数、Jev が使えないときの手元の判断
+
+### D-18. Jev の確率に温度を掛ける (2026-09-19)
+
+decision 群に `temperature` スライダー (0〜2、既定 1) を足した。Jev の API には温度の指定が無い
+(送れるのは `model` / `state` / `questions` だけ) ので、返った確率に手元で掛ける。
+
+- choice: `p^(1/T)` を正規化してから引く (`tempProbs()`)。選べる選択肢 (`allowed`) に絞ってから掛ける
+- noul: 対数オッズを T で割る (`tempP()`)。shift / lush などの倍率 (gate) は温度を掛けたあとに掛ける
+- T=1 で Jev の確率そのまま。下げるほどいちばん確率の高い答えに寄り、0 (0.02 未満) では必ずそれを取る。
+  noul は 0.5 より上なら必ず起こし、下なら起こさない。上げるほど選択肢が均され、noul は 0.5 に寄る
+- 例: 確率 .6 / .3 / .1 は T=0.5 で .78 / .20 / .02、T=2 で .47 / .33 / .19。noul の .7 は T=0.5 で .85、T=2 で .60
+- 判断の任せ方なので、jev と同じく (edit) を付けない。音の変化ではないので滑らかに寄せず、目標値をすぐ使う
+- 手元の判断 (jev の割合で手元に回した分、答えが無いとき) には掛けない。D-5 の「0 なら two と同じ」を保つため
 
 ---
 

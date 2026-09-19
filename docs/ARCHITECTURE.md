@@ -395,7 +395,7 @@ EK の構造 (two:D-37) のまま、青紫の地に白い文字、淡いクリ�
 `#pbarpos` の末尾には、いまの小節の装飾 (`dub` / `fill`) が出る。
 
 群は control (master / character / motion / tonality / decision)・mixer (drums / bass / harmony / riff / texture) の2つと、右カラムの monitor / jev (two:D-57 / two:D-61 / D-14)。
-decision 群の `jev` は判断を Jev に任せる割合 (D-5)。雰囲気の操作ではないので、動かしてもシーン名に (edit) を付けない (D-10)。
+decision 群の `jev` は判断を Jev に任せる割合 (D-5)、`temperature` は Jev の確率に掛ける温度 (0〜2、D-18)。雰囲気の操作ではないので、動かしてもシーン名に (edit) を付けない (D-10)。
 `mixGroup()` が群を、`mixSub()` が群の中の小見出し付きの列を作る。
 `reset all` は、`addSlider()` が登録簿 `sliders` に積んだ既定値へ全部戻し、保存した個別の音量を消す。
 陰陽の既定値だけは関数で、いまのシーンの位置を返す。
@@ -421,7 +421,7 @@ MUTE されているか、どれかが SOLO でそれ以外なら 0、そうで�
 上りのゼロ交差を起点にするので、波形が横へ流れずその場で形が変わる。
 鳴っていないときは描かない。
 
-## Jev (D-3〜D-15)
+## Jev (D-3〜D-17)
 
 ```
 index.html                         worker/ (elevator-three-api)            TypeSafe
@@ -434,9 +434,14 @@ onBar(bar) ─ jevTake(name, tag) → jevChoice / jevRoll → 手元の判断 (t
 - 問い合わせは `onBar()` の末尾の `jevPlan()` と、`startTransition()` の `jevAskHarmony()`、
   `planSpark()` の `jevAskRiff()` から出る。予定は DESIGN.md の D-7
 - 使うのは `startTransition()` (行き先・方式・長さ)、`enterScene()` (キー・進行)、`nextPhrase()` (フレーズ型・lush)、
-  `maybeEvent()`、`planDub()`、平行移動の転調の判定、リフの差し替え (`jevAskRiff` の `onAnswer`)
+  `maybeEvent()`、`planDub()`、平行移動の転調の判定、リフの差し替え (`jevAskRiff` の `onAnswer`)。
+  D-17 で、`enterScene()` / `rollNoise()` (ベースの音色・コードの連打・ノイズ)、`nextPhrase()` (ep)、
+  `regenerate()` (リードの音色・並びの再抽選)、`buildBar()` (キックの変形)、平行移動の幅とペダルを足した
+- 毎小節引く判断のため、`onBar()` の頭で取り出した phrase / shift の答えを `jevHold` に次の答えまで持つ。
+  取り出すのは `jevHeld(name)`。`enterScene()` で捨てる (D-17)
 - `jevChoice()` は jev スライダーの割合で Jev の分布から引き、残りは `null` を返して呼び手に手元で引かせる。
-  `jevRoll()` は真偽の問いを引いて結果を返す (D-5 / D-15)
+  `jevRoll()` は真偽の問いを引いて結果を返す。p を変換する `map` を渡せる (mutate で小節あたりに直す) (D-5 / D-15 / D-17)
+- 温度 (D-18): `sampleProbs()` は `tempProbs()`、`jevRoll()` は `tempP()` で Jev の確率に `target.temp` を掛けてから引く。API には温度が無いので手元で掛ける
 - state は `jevState()`。いまの状態と、`histPush()` が積む出来事の履歴 `hist` を渡す (D-6)
 - `jev.status` は off / local / offline / on。3回続けて失敗したら `jev.pauseUntil` まで問い合わせない
 - 問い合わせるかどうか (`jevActive`) は目標値 `target.jev` で決める。滑らかに寄せる `current.jev` は 0 にならないので、それで決めるとスライダーを 0 にしても問い合わせが続く (D-12)
