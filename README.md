@@ -59,6 +59,7 @@ Worker の試験は `npm run test:worker`。
 **操作と見た目**
 - control に decision 群を足し、`jev` スライダー (既定 0.8) を置いた。判断のうち Jev に任せる割合
 - monitor に Jev の状態・応答時間・Jev と手元で決めた数・直近の判断を出す
+- monitor の最下段に Jev とのやり取りを出す。何を問い、何が返り、何を使ったか (D-11)
 
 **開発**
 - 中継の Worker を `worker/` に置いた。質問文は Worker 側だけが持ち、形とサイズ、オリジン、回数を絞る

@@ -55,6 +55,11 @@ test('イベントは Jev の答えどおりに起きる', async ({ page }) => {
   await expect(page.locator('#pevent')).toContainText('kick out', { timeout: 30000 });
   await expect(page.locator('#pjev')).toContainText('on');
   await expect(page.locator('#pjevd')).toContainText('event kickdrop 100%');
+  // monitor のログ (D-11)。問い・答え・使ったものが並ぶ
+  const log = page.locator('#jevlog');
+  await expect(log).toContainText(/bar \d+ phrase → by \d+\s+event\(10\)/);
+  await expect(log).toContainText('event kickdrop 100%');
+  await expect(log).toContainText('used  event kickdrop');
   const req = seen.find(b => b.kind === 'phrase');
   // 質問文は送らない。選択肢と state だけ
   expect(Object.keys(req.ask.event)).toContain('none');
@@ -112,6 +117,8 @@ test('リフは Jev が選んだ候補の旋律で鳴る', async ({ page }) => {
   await expect.poll(() => played.length, { timeout: 30000 }).toBeGreaterThan(0);
   expect(want).not.toBeNull();
   expect(played).toContain(want);
+  // ログには選んだ候補の旋律まで出す
+  await expect(page.locator('#jevlog')).toContainText(want);
 });
 
 test('遅れて届いた答えは捨て、手元の判断で進む', async ({ page }) => {
@@ -132,6 +139,7 @@ test('Worker に繋がらなくても進行は止まらない', async ({ page })
   const seen = await fakeWorker(page, () => ({}), { fail: true });
   await start(page);
   await expect(page.locator('#pjev')).toContainText('offline', { timeout: 20000 });
+  await expect(page.locator('#jevlog')).toContainText('✕');
   const bar = async () => parseInt(await page.locator('#rbar').textContent(), 10);
   const b0 = await bar();
   await page.waitForTimeout(5000);
@@ -150,4 +158,5 @@ test('?jev=0 では問い合わせない', async ({ page }) => {
   await page.waitForTimeout(10000);
   expect(seen.length).toBe(0);
   await expect(page.locator('#pjev')).toHaveText('off');
+  await expect(page.locator('#jevlog')).toHaveText('jev off — nothing is asked');
 });

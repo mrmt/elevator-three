@@ -188,6 +188,14 @@
   #monitor .rd b:last-child{margin-right:0}
   #cv{display:block;width:100%;height:84px;border:1px solid var(--line);background:#050506}
   #monitor .steps,#monitor .prog{margin-top:0}
+  /* Jev とのやり取り (D-11)。1件3行: 問い / 答え / 使ったもの。新しい順 */
+  .jevlog{font-family:var(--data);font-size:.56rem;letter-spacing:.02em;color:var(--dim);
+          display:grid;gap:.3rem;border-top:1px solid var(--line);padding-top:.4rem}
+  .jevlog .e{display:grid;gap:.08rem}
+  .jevlog .e>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .jevlog .a{color:var(--ink)}
+  .jevlog .u{color:var(--amber)}
+  .jevlog .x{color:#8A5A4A}
 
   /* ---- 大きな再生ボタンと READ ME FIRST (Issue #1 / two:D-72) ----
      右上の小さなボタンだけでは、まず押さないと鳴らないことに気づけない。
@@ -460,6 +468,8 @@
               <!-- Jev の状態と、直近に Jev が決めたこと (D-9) -->
               <div><span>jev</span> <b id="pjev">—</b> <span id="pjevd"></span></div>
             </div>
+            <!-- Jev に何を問い、何が返り、何を使ったか (D-11) -->
+            <div class="jevlog" id="jevlog"></div>
           </div>
         </div>
       </div>
@@ -3636,6 +3646,57 @@ function jevState(extra){
   };
 }
 
+/* ---- やり取りのログ (D-11) ----
+   問い合わせ1回を1件とし、問い・答え・使ったものを monitor に出す。
+   答えの answers から件を引けるようにしておき、jevChoice / jevP が使ったものを書き足す */
+const JEV_LOG_MAX=5;
+const jevEntries=[], ansEntry=new WeakMap();
+const pct=p=>Math.round(p*100)+'%';
+function fmtAsk(ask){
+  return Object.entries(ask).map(([q,o])=>o===true ? q+'?' : `${q}(${Object.keys(o).length})`).join(' ');
+}
+function fmtAnswers(ans){
+  return Object.entries(ans).map(([q,a])=>{
+    if(!a.probs) return `${q} ${pct(a.p)}`;
+    const top=Object.entries(a.probs).sort((x,y)=>y[1]-x[1]).slice(0,3);
+    return q+' '+top.map(([k,p])=>`${k} ${pct(p)}`).join(' / ');
+  }).join(' · ') || '(no answer)';
+}
+function renderJevLog(){
+  const el=document.getElementById('jevlog');
+  if(!el) return;
+  if(JEV_OFF){ el.textContent='jev off — nothing is asked'; return; }
+  el.replaceChildren(...jevEntries.map(e=>{
+    const box=document.createElement('div'); box.className='e';
+    const line=(cls,text)=>{ const d=document.createElement('div'); if(cls) d.className=cls; d.textContent=text; box.appendChild(d); };
+    line('',`bar ${e.bar} ${e.name} → by ${e.deadline}  ${fmtAsk(e.ask)}  [${e.ctx}]`);
+    line(e.status==='ok' ? 'a' : e.status==='waiting' ? '' : 'x',
+      e.status==='waiting' ? '… waiting'
+      : e.status==='ok'     ? `← ${e.ms}ms  ${fmtAnswers(e.answers)}`
+      : e.status==='late'   ? `← ${e.ms}ms  late, discarded`
+      : e.status==='stale'  ? `← ${e.ms}ms  ${fmtAnswers(e.answers)}  (not used: moment passed)`
+      :                       `✕ ${e.error}`);
+    if(e.used.length) line('u','used  '+e.used.join(' · '));
+    box.title=JSON.stringify({ask:e.ask, answers:e.answers}, null, 1).slice(0,3000);
+    return box;
+  }));
+}
+function jevEntry(name,deadline,ask,state){
+  const e={bar:barCount, name, deadline, ask, status:'waiting', ms:null, answers:null, used:[], error:'',
+           ctx:`${state.scene.id} ${state.phrase.now} ${state.key}`};
+  jevEntries.unshift(e);
+  if(jevEntries.length>JEV_LOG_MAX) jevEntries.pop();
+  renderJevLog();
+  return e;
+}
+// 使ったものを書き足す。local は、答えはあったが割合で手元の判断に回したもの
+function jevUsed(ans,text){
+  const e=ans && ansEntry.get(ans);
+  if(!e) return;
+  e.used.push(text);
+  renderJevLog();
+}
+
 /* 問い合わせる。name は予約の名前、tag はその判断を使う場面 (小節など)。
    deadline の小節の onBar() より後に届いた応答は捨てる。onAnswer は届いたときに呼ぶ */
 function jevAsk(name,kind,{tag,deadline,ask,extra,onAnswer}){
@@ -3645,19 +3706,27 @@ function jevAsk(name,kind,{tag,deadline,ask,extra,onAnswer}){
   const timer=setTimeout(()=>ac.abort(),budget);
   const t0=performance.now();
   jev.inflight[name]=true;
+  const state=jevState(extra);
+  const entry=jevEntry(name,deadline,ask,state);
   fetch(JEV_URL,{method:'POST', headers:{'Content-Type':'application/json'},
-                 body:JSON.stringify({kind, state:jevState(extra), ask}), signal:ac.signal})
+                 body:JSON.stringify({kind, state, ask}), signal:ac.signal})
     .then(r=>r.ok ? r.json() : Promise.reject(new Error('HTTP '+r.status)))
     .then(d=>{
       jev.ms=Math.round(performance.now()-t0); jev.fails=0; jev.status='on';
-      if(barCount>=deadline){ jevLog('late',name,jev.ms+'ms'); return; }
+      entry.ms=jev.ms;
+      if(barCount>=deadline){ entry.status='late'; renderJevLog(); jevLog('late',name,jev.ms+'ms'); return; }
       const answers=(d && d.answers) || {};
+      entry.status='ok'; entry.answers=answers; ansEntry.set(answers,entry);
+      renderJevLog();
       jev.book[name]={tag, answers};
       jevLog(name,'@'+tag,jev.ms+'ms',answers);
       if(onAnswer) onAnswer(answers);
     })
     .catch(e=>{
       jev.fails++; jev.status='offline';
+      entry.status='failed';
+      entry.error = e && e.name==='AbortError' ? 'no answer in time' : String(e && e.message || e);
+      renderJevLog();
       if(jev.fails>=JEV_FAILS) jev.pauseUntil=barCount+JEV_PAUSE;
       jevLog('failed',name,String(e));
     })
@@ -3669,7 +3738,10 @@ function jevTake(name,tag){
   const b=jev.book[name];
   if(!b || b.tag>tag) return null;
   delete jev.book[name];
-  return b.tag===tag ? b.answers : null;
+  if(b.tag===tag) return b.answers;
+  const e=ansEntry.get(b.answers);
+  if(e){ e.status='stale'; renderJevLog(); }
+  return null;
 }
 let jevNow={};   // この小節で使う応答。onBar() の頭で取り出す
 
@@ -3687,18 +3759,31 @@ function sampleProbs(probs,allowed){
 function jevChoice(ans,qid,allowed=()=>true,{always=false}={}){
   const a=ans && ans[qid];
   const k = (a && a.probs && (always || Math.random()<jevInfl())) ? sampleProbs(a.probs,allowed) : null;
-  if(k===null){ jev.local++; return null; }
+  if(k===null){
+    jev.local++;
+    if(a && a.probs) jevUsed(ans,`${qid} → local`);
+    return null;
+  }
   jev.used++;
   jev.last=`${qid} ${k} ${Math.round(a.probs[k]*100)}%`;
+  // リフは記号 (r0〜r5) では分からないので旋律を添える
+  const e=ansEntry.get(ans);
+  const desc = qid==='riff' && e ? ' '+e.ask.riff[k] : '';
+  jevUsed(ans,`${qid} ${k}${desc}`);
   return k;
 }
 /* 真偽の問いの確率。gate は、スライダー (shift / lush) を 0 にしたら出さないという約束を
    Jev の側でも守るための倍率 */
 function jevP(ans,qid,localP,gate=1){
   const a=ans && ans[qid];
-  if(!a || typeof a.p!=='number' || Math.random()>=jevInfl()){ jev.local++; return localP; }
+  if(!a || typeof a.p!=='number' || Math.random()>=jevInfl()){
+    jev.local++;
+    if(a && typeof a.p==='number') jevUsed(ans,`${qid} → local`);
+    return localP;
+  }
   jev.used++;
   jev.last=`${qid} ${Math.round(a.p*100)}%`;
+  jevUsed(ans,`${qid} p=${pct(clamp(a.p*gate))}`);
   return clamp(a.p*gate);
 }
 
@@ -4187,6 +4272,7 @@ const pWave=document.getElementById('pwave');
 const pKey=document.getElementById('pkey');
 const pChord=document.getElementById('pchord');
 const pJev=document.getElementById('pjev'), pJevD=document.getElementById('pjevd');
+renderJevLog();   // jev=0 のときはその旨を出す (D-11)
 function showProgress(){
   pPhrase.textContent=(PHRASE_LABEL[phrase]||phrase)
     + (pendingScene>=0
