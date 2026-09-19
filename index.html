@@ -4060,7 +4060,8 @@ function paramSlider(host,key){
       target[key]=v;
       // 手で陰陽を動かしたら、波の位置もそこへ移す。放したあとは続きから進む (two:D-13)
       if(key==='yy') wavePos=yyToWavePos(v);
-      markEdited();
+      /* jev は判断の任せ方で、雰囲気の操作ではない。(edit) を付けると陰陽が波に従わなくなるので付けない */
+      if(key!=='jev') markEdited();
     }});
 }
 // SOLO / MUTE を持つ行 (two:D-59)。key → .param

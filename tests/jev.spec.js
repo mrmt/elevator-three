@@ -41,6 +41,9 @@ test('jev のスライダーと monitor の表示がある', async ({ page }) =>
   await expect(page.locator('#s_jev')).toBeVisible();
   await expect(page.locator('#s_jev')).toHaveValue('0.8');
   await expect(page.locator('#pjev')).toBeVisible();
+  // 雰囲気の操作ではないので (edit) を付けない。付くと陰陽が波に従わなくなる
+  await page.locator('#s_jev').fill('0.5');
+  await expect(page.locator('#scenename')).not.toContainText('(edit)');
 });
 
 test('イベントは Jev の答えどおりに起きる', async ({ page }) => {
