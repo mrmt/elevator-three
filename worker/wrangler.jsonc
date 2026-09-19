@@ -1,0 +1,15 @@
+{
+  // elevator-three の判断を Jev に問い合わせる中継 (D-3)
+  "name": "elevator-three-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-03",
+  "routes": [
+    { "pattern": "three-api.elevator-noise.com", "custom_domain": true }
+  ],
+  // IP ごとに毎分60回まで。楽器1つの問い合わせは毎分10回ほど
+  "ratelimits": [
+    { "name": "LIMITER", "namespace_id": "3001", "simple": { "limit": 60, "period": 60 } }
+  ]
+  // TYPESAFE_API_KEY は `npx wrangler secret put TYPESAFE_API_KEY` で置く。
+  // 手元の wrangler dev では worker/.dev.vars に書く (git には入れない)
+}

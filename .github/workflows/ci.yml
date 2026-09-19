@@ -25,6 +25,10 @@ jobs:
       - name: Run tests
         run: npm test
 
+      # 中継の Worker (D-3) の検証関数。依存パッケージは無い
+      - name: Run worker tests
+        run: node --test worker/test
+
       - if: failure()
         uses: actions/upload-artifact@v5
         with:
