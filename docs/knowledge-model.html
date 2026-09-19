@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>elevator-two の音楽知識モデル</title>
+<title>elevator-three の音楽知識モデル</title>
 <style>
 :root{--bg:#090b0d;--panel:#11151a;--panel2:#171c22;--text:#e8edf2;--muted:#98a3ad;--line:#303841;--accent:#ffd400;--accent2:#8ce6ff;--max:980px}
 *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:linear-gradient(180deg,#07090b 0,#0d1115 35%,#090b0d 100%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;line-height:1.85}
@@ -23,10 +23,11 @@ ul,ol{padding-left:1.5em} li{margin:.38em 0} .tablewrap{overflow:auto;margin:1.4
 </style>
 </head>
 <body>
-<header class="hero"><div class="hero-inner"><div class="eyebrow">ELEVATOR-TWO / MUSIC SYSTEM NOTES</div><h1>elevator-two の音楽知識モデル</h1><div class="subtitle">知識・状態・記憶・制約・判断・演奏という観点から、自動演奏システムの内側を読み解く</div></div></header>
+<header class="hero"><div class="hero-inner"><div class="eyebrow">ELEVATOR-THREE / MUSIC SYSTEM NOTES</div><h1>elevator-three の音楽知識モデル</h1><div class="subtitle">知識・状態・記憶・制約・判断・演奏という観点から、自動演奏システムの内側を読み解く</div></div></header>
 <main><h2>はじめに ― コードの中にある「音楽知識」を分離して考える</h2>
-<p>elevator-two には、多数のアルゴリズム、確率、パラメータ、音源回路が存在する。しかし、それらを実装の集合としてだけ見ると、このシステムがなぜ音楽として成立するのかが見えにくい。</p>
-<p>そこで、現在の実装から一段抽象化し、elevator-two が持っているものを<strong>音楽知識モデル</strong>として整理する。</p>
+<p>elevator-three は elevator-two から分岐した楽器で、音源と音楽的な規則は elevator-two と同じものを持つ。違いは判断の一部を外部のモデル Jev に相談する点にある。以下では、両者に共通する知識のモデルを整理し、そのどこに Jev が入ったのかを示す。</p>
+<p>elevator-three には、多数のアルゴリズム、確率、パラメータ、音源回路が存在する。しかし、それらを実装の集合としてだけ見ると、このシステムがなぜ音楽として成立するのかが見えにくい。</p>
+<p>そこで、現在の実装から一段抽象化し、elevator-three が持っているものを<strong>音楽知識モデル</strong>として整理する。</p>
 <p>ここでいう音楽知識とは、音楽理論だけではない。</p>
 <ul>
 <li>何を守るべきか</li>
@@ -39,9 +40,9 @@ ul,ol{padding-left:1.5em} li{margin:.38em 0} .tablewrap{overflow:auto;margin:1.4
 <li>どの変化なら「同じものの変奏」と聞こえるか</li>
 </ul>
 <p>までを含む。</p>
-<p>elevator-two は、この知識を使って<strong>状態を観察し、判断し、演奏行為へ変換するシステム</strong>と考えることができる。</p>
+<p>elevator-three は、この知識を使って<strong>状態を観察し、判断し、演奏行為へ変換するシステム</strong>と考えることができる。</p>
 <h2>1. 全体モデル</h2>
-<p>最も単純化すると、elevator-two は次の循環で動く。</p>
+<p>最も単純化すると、elevator-three は次の循環で動く。</p>
 <pre><code>            ┌───────────────┐
             │   音楽知識     │
             │ rules / taste │
@@ -60,8 +61,16 @@ ul,ol{padding-left:1.5em} li{margin:.38em 0} .tablewrap{overflow:auto;margin:1.4
                                     └─────────────┘</code></pre>
 <p>重要なのは、乱数はこの図の中心ではないことだ。</p>
 <p>乱数は<strong>判断の候補から一つを選ぶ道具</strong>であり、候補そのもの、選んでよい条件、選んではいけない条件は音楽知識によって決められる。</p>
+<p>elevator-three では、この「判断」の箱が三つに分かれる。</p>
+<pre><code>判断 decisions
+ ├─ 音楽知識   候補を作り、不適切なものを除く        (elevator-two と同じ)
+ ├─ Jev        残った候補に、流れを踏まえた確率を付ける (elevator-three で追加)
+ └─ 手元の乱数 Jev の確率に従って引く。
+               Jev に任せない割合の判断と、答えが間に合わないときは
+               elevator-two と同じ固定の確率で引く</code></pre>
+<p>Jev に渡るのは「現在の状態」と「記憶」の一部を言葉と記号にしたもので、Jev が返すのは確率だけである。候補の外を選ぶことはできない。</p>
 <h2>2. 知識は六種類に分けられる</h2>
-<p>現在のelevator-twoの知識は、概念的には六種類に整理できる。</p>
+<p>現在のelevator-threeの知識は、概念的には六種類に整理できる。</p>
 <h3>2.1 不変条件 ― 守らなければ音楽の骨格が壊れるもの</h3>
 <p>例:</p>
 <ul>
@@ -85,7 +94,7 @@ ul,ol{padding-left:1.5em} li{margin:.38em 0} .tablewrap{overflow:auto;margin:1.4
 <li>ドラム変形: 抜き / 食い / double / ghost</li>
 <li>リフ変奏: 移調反復 / 反転 / 追加 / 削除 / rhythm variation</li>
 </ul>
-<p>elevator-two は無限の音楽を直接探索するのではなく、<strong>人間が音楽的だと認めた語彙の組み合わせ</strong>を探索している。</p>
+<p>elevator-three は無限の音楽を直接探索するのではなく、<strong>人間が音楽的だと認めた語彙の組み合わせ</strong>を探索している。</p>
 <h3>2.3 文脈依存規則 ― 同じ行為でも場面によって意味が変わる</h3>
 <p>例:</p>
 <ul>
@@ -110,8 +119,10 @@ ul,ol{padding-left:1.5em} li{margin:.38em 0} .tablewrap{overflow:auto;margin:1.4
 <li>industrial noiseの左右を70%で独立周期にする</li>
 </ul>
 <p>確率値は音楽的な<strong>癖</strong>として働く。</p>
+<p>elevator-three では、この層の一部が Jev に置き換わった。次のシーン、渡し方、次のシーンの長さ、フレーズ型、4小節の節目の仕掛け、dub、キーと進行、転調、開いた和声、新しいリフの旋律。これらは Jev が返す確率に従って引く。<code>jev</code> スライダーの値 (既定 0.8) がその割合で、残りは elevator-two と同じ固定の確率で引く。固定の確率は、答えが間に合わないときの既定としても残る。</p>
+<p>固定の癖が、流れを読んだうえでの判断に変わった、ということもできる。ただし、上の例のうちリフの応答、オクターブ下げ、フィルのはみ出し、ノイズの周期は、いまも固定の確率のままである。</p>
 <h3>2.5 記憶 ― 過去との関係を作る知識</h3>
-<p>elevator-twoには複数の時間幅の記憶がある。</p>
+<p>elevator-threeには複数の時間幅の記憶がある。</p>
 <ul>
 <li>直近に使ったシーン</li>
 <li>現在のpattern seed</li>
@@ -121,8 +132,10 @@ ul,ol{padding-left:1.5em} li{margin:.38em 0} .tablewrap{overflow:auto;margin:1.4
 <li>motifの寿命</li>
 <li>呼びかけに対する予定された応答</li>
 <li>現在の陰陽波の位置</li>
+<li>Jev に渡す出来事の履歴 (シーン、フレーズ、仕掛け、dub、リフ、キーを、種類ごとに直近8件)</li>
 </ul>
 <p>これによって現在の演奏が、過去から独立した乱数列ではなくなる。</p>
+<p>最後の履歴は elevator-three で加えた記憶で、楽器自身は読まない。Jev に「ここ数分に何が起きてきたか」を伝えるためだけにある。</p>
 <p>特にspark motifは、絶対音程ではなく<strong>和音内の相対的な動き</strong>を記憶する。これは「音そのもの」ではなく「音楽的関係」を記憶している例である。</p>
 <h3>2.6 忘却 ― 同じ知識を永久に使わないための知識</h3>
 <p>記憶と同じくらい重要なのが忘却である。</p>
@@ -130,7 +143,7 @@ ul,ol{padding-left:1.5em} li{margin:.38em 0} .tablewrap{overflow:auto;margin:1.4
 <p>これは、生成システムにとって重要な原則を示している。</p>
 <blockquote><strong>反復には記憶が必要だが、展開には忘却が必要である。</strong></blockquote>
 <h2>3. 状態モデル ― アプリは何を「現在」として認識しているか</h2>
-<p>elevator-two が判断に使う状態は、単一の変数ではない。</p>
+<p>elevator-three が判断に使う状態は、単一の変数ではない。</p>
 <pre><code>GLOBAL
  ├─ 陰陽波の位置
  ├─ BPM
@@ -167,8 +180,9 @@ MOTIF / PATTERN MEMORY
 <p>「step 12だから音を鳴らす」のではなく、</p>
 <blockquote>「陽へ向かっている曙のbuild後半で、8小節の折り返しに近く、ベースは疎で、前の区間にsparkの呼びかけがあった」</blockquote>
 <p>という状態を背景に、実際の音が決まる。</p>
+<p>elevator-three は、この状態の一部を文字にして Jev に渡す。シーンの名前と性格の説明、フレーズとその経過、陰陽の波の位置と向き、キーと和音、密度・glitch・evolution の値、そして上の履歴である。Jev は音を聴けないので、これが Jev にとっての「いま」のすべてになる。</p>
 <h2>4. 判断は時間階層ごとに分業される</h2>
-<p>音楽知識モデルとして見ると、elevator-twoは一つの巨大な判断器ではなく、<strong>異なる時間感覚を持つ複数のエージェント</strong>に近い。</p>
+<p>音楽知識モデルとして見ると、elevator-threeは一つの巨大な判断器ではなく、<strong>異なる時間感覚を持つ複数のエージェント</strong>に近い。</p>
 <h3>4.1 Composer ― 長期構成</h3>
 <p>時間幅: 20〜40分〜数分</p>
 <p>判断:</p>
@@ -180,6 +194,7 @@ MOTIF / PATTERN MEMORY
 </ul>
 <p>目的:</p>
 <p><strong>長く聴いたときに「大きな呼吸」を作る。</strong></p>
+<p>elevator-three では、次のシーン、渡し方、長さ、行き先のキーと進行を Jev に相談する。問い合わせるのは、乗り換えの8〜16小節前である。</p>
 <h3>4.2 Arranger ― フレーズ構成</h3>
 <p>時間幅: 8〜16小節</p>
 <p>判断:</p>
@@ -193,6 +208,7 @@ MOTIF / PATTERN MEMORY
 </ul>
 <p>目的:</p>
 <p><strong>現在の素材を使って起伏を作る。</strong></p>
+<p>elevator-three では、フレーズ型を Jev に相談する。ただし候補は、そのシーンが出しうる型に限る。</p>
 <h3>4.3 Section editor ― 4〜8小節の句読点</h3>
 <p>判断:</p>
 <ul>
@@ -205,6 +221,7 @@ MOTIF / PATTERN MEMORY
 </ul>
 <p>目的:</p>
 <p><strong>長い反復の中に節目を聞かせる。</strong></p>
+<p>elevator-three では、4小節の節目の仕掛け (「何もしない」を含む) と dub を Jev に相談する。フィルの置き場所と spark riff を呼ぶかどうかは、手元の規則のままである。</p>
 <h3>4.4 Players ― 各楽器の演奏判断</h3>
 <p>各楽器は同じ生成方式を共有しない。</p>
 <ul>
@@ -217,6 +234,7 @@ MOTIF / PATTERN MEMORY
 </ul>
 <p>目的:</p>
 <p><strong>楽器の役割に応じた自由を与える。</strong></p>
+<p>Players の判断は Jev に相談しない。例外は spark player で、新しい旋律を弾くときだけ、6通りの候補のどれを弾くかを Jev が選ぶ。</p>
 <h3>4.5 Mixer / dub engineer ― 音響も編曲として扱う</h3>
 <p>判断:</p>
 <ul>
@@ -228,15 +246,17 @@ MOTIF / PATTERN MEMORY
 </ul>
 <p>目的:</p>
 <p><strong>音響操作を「後処理」ではなく演奏行為にする。</strong></p>
+<p>Mixer の判断も Jev に相談しない。</p>
 <h2>5. 判断の基本形は「条件 → 候補 → 制約 → 重み → 行為」</h2>
 <p>多くの判断は、概念的には次の形に整理できる。</p>
 <pre><code>1. 現在の状態を読む
 2. 今回選べる候補を作る
 3. 音楽的に不適切な候補を除く
-4. 残った候補に文脈依存の重みを付ける
-5. 必要なら確率で一つ選ぶ
+4. 残った候補に文脈依存の重みを付ける   ← elevator-three では Jev が付ける
+5. 必要なら確率で一つ選ぶ               ← Jev の確率に従って引く (最大確率は取らない)
 6. 演奏行為へ変換する
 7. 必要な記憶を更新する</code></pre>
+<p>elevator-three が置き換えたのは 4 と 5 だけである。候補を作る 2 と、除く 3 は音楽知識の仕事のまま残る。Jev は流れを読む重み付けの係であって、何が音楽として許されるかは決めない。</p>
 <p>たとえば次のシーン選択なら、</p>
 <pre><code>陰陽波の現在位置
       ↓
@@ -244,13 +264,15 @@ MOTIF / PATTERN MEMORY
       ↓
 直近のシーンを除外
       ↓
-別群を優先
+波に近い6つに絞る
       ↓
-遷移可能性を確認
+Jev に、候補の性格の説明とここ数分の履歴を見せる
       ↓
-scene決定
+Jev の確率に従って scene決定   (elevator-two では「別群を80%で優先」)
       ↓
-break / morph / mix を決定</code></pre>
+遷移可能性を確認 (morph は同じ群・同じキットだけ)
+      ↓
+break / morph / mix を Jev の確率に従って決定</code></pre>
 <p>spark riffなら、</p>
 <pre><code>4小節区間の開始
       ↓
@@ -264,6 +286,8 @@ scene groupからrhythm profile
       ↓
 新規motif or remembered motif
       ↓
+新規なら同じ音数で6通り作り、Jev に選ばせる (3小節先に置いて答えを待つ)
+      ↓
 variation
       ↓
 register / timbre contour
@@ -273,7 +297,7 @@ register / timbre contour
 motif lifeを更新</code></pre>
 <p>この形は、将来新しい知識を追加するときの共通フレームとして使える。</p>
 <h2>6. 「音楽的制約」は生成能力を狭めるのではなく、意味を作る</h2>
-<p>elevator-twoでは制約が非常に多い。</p>
+<p>elevator-threeでは制約が非常に多い。</p>
 <p>一見すると、生成AI的な自由度を下げているように見える。しかし実際には逆である。</p>
 <p>たとえば、</p>
 <ul>
@@ -286,8 +310,9 @@ motif lifeを更新</code></pre>
 </ul>
 <p>つまり制約は「できないこと」ではない。</p>
 <p><strong>差異を知覚可能にするための背景</strong>である。</p>
+<p>elevator-three では、制約にもう一つの役目が加わった。<strong>判断を外部に委ねても、骨格が壊れないようにする</strong>ことである。Jev は候補の外を選べず、候補は制約を通ったものだけでできている。Jev の答えが的外れでも、答えが来なくても、鳴るのは音楽として許された範囲の中である。制約があるから、判断を安心して委ねられる。</p>
 <h2>7. 反復・変奏・対比・休止 ― 四つの基本操作</h2>
-<p>現在の実装を抽象化すると、elevator-twoの編曲は主に四つの操作からできている。</p>
+<p>現在の実装を抽象化すると、elevator-threeの編曲は主に四つの操作からできている。</p>
 <h3>反復</h3>
 <p>pattern seed、bass seed、2小節単位の顔、持続するscene identity。</p>
 <p>聴き手に「いま何が鳴っているか」を覚えさせる。</p>
@@ -300,12 +325,13 @@ motif lifeを更新</code></pre>
 <h3>休止</h3>
 <p>break、kick/hat抜き、dub dry cut。</p>
 <p>音を追加せず、欠落によって構造を聞かせる。</p>
-<p>この四つを時間階層ごとに組み合わせることが、elevator-twoの編曲の基本文法といえる。</p>
+<p>この四つを時間階層ごとに組み合わせることが、elevator-threeの編曲の基本文法といえる。</p>
+<p>Jev が主に関わるのは、このうち対比と休止の置き方である。いつ別の群へ渡るか、いつ break や dub で抜くか、いつ何も起こさずに反復を続けるか。</p>
 <h2>8. 音高・リズム・音色・空間を同格の演奏パラメータとして扱う</h2>
 <p>一般的な自動作曲では、音高とリズムを生成し、その後に音色を当てる構造になりやすい。</p>
-<p>elevator-twoでは、これは当てはまらない。</p>
+<p>elevator-threeでは、これは当てはまらない。</p>
 <p>ベースでは、音程が単純ならfilter movementが増える。spark riffでは、旋律と同時にcutoff、Q、decayのフレーズ内輪郭が決まる。dubでは、dryとdelay returnの関係そのものが1小節の演奏になる。buildでは、シーケンスのping-pong delayが深くなり、音像が広がる。</p>
-<p>したがって、elevator-twoの「ノート」は概念的には、</p>
+<p>したがって、elevator-threeの「ノート」は概念的には、</p>
 <pre><code>note =
   pitch
 + onset
@@ -316,7 +342,7 @@ motif lifeを更新</code></pre>
 + structural role</code></pre>
 <p>として扱ったほうが実態に近い。</p>
 <h2>9. 知識には「由来」と「確信度」がある</h2>
-<p>DESIGN.mdを見ると、多くの規則は最初から理論的に決められたものではない。</p>
+<p>elevator-two の設計の記録 (two-DESIGN.md) を見ると、多くの規則は最初から理論的に決められたものではない。</p>
 <p>「聴いた結果の指摘から」という記録が何度も現れる。</p>
 <p>たとえば、</p>
 <ul>
@@ -340,6 +366,8 @@ motif lifeを更新</code></pre>
  ├─ rationale      なぜそうするか
  └─ evidence       試聴・実測・設計判断</code></pre>
 <p>これは、今後Claude Codeや別のAIと開発を続ける際にも有効である。</p>
+<p>elevator-three では、Jev の答えそのものが確信度を持つ。Jev は選択肢ごとの確率に加えて confidence を返す。これを、ある判断をどこまで Jev に委ねるかの手がかりにできる。</p>
+<p>由来についても、試聴から学ぶ流れは変わらない。本物の Jev で鳴らしてみると、4小節の節目の仕掛けについて Jev は「何もしない」を5〜7割選び、手元の規則より仕掛けが控えめになった。これも、次に質問文を詰めるための経験知である。</p>
 <h2>10. 現在の知識モデルの強み</h2>
 <h3>局所ランダムに陥らない</h3>
 <p>長期波、scene、phrase、bar、stepが分離されているため、16分音符の変化がそのまま曲全体の迷走にならない。</p>
@@ -350,16 +378,19 @@ motif lifeを更新</code></pre>
 <h3>音響が作曲から分離していない</h3>
 <p>filter、delay、resonance、stereo imageまで構成要素になっている。</p>
 <h3>人間が介入できる</h3>
-<p>完全自律ではなく、陰陽、密度、evolution、mutate、scene selection、nextなどで、人間が高位の意図を与えられる。</p>
+<p>完全自律ではなく、陰陽、密度、evolution、mutate、scene selection、nextなどで、人間が高位の意図を与えられる。<code>jev</code> スライダーで、判断をどこまで外部に委ねるかも決められる。</p>
+<h3>判断を外部に委ねられ、委ねても骨格が壊れない</h3>
+<p>重み付けの段だけを Jev に開いたので、流れを読んだ判断を外から借りられる。一方で、候補と制約は手元に残るので、答えが外れても、来なくても、音楽は成立し続ける。</p>
 <h2>11. 現在のモデルにまだ明示されていないもの</h2>
 <p>ここからは「現状に存在しない機能」の提案ではなく、<strong>現在の資料からは明示的なモデルとして確認できない領域</strong>を区別しておく。</p>
 <h3>聴覚的な自己評価</h3>
 <p>現在は「自分が今どのくらい混雑して聞こえているか」「直前の結果が良かったか」を音声解析して判断する仕組みは、資料上の中心モデルにはない。</p>
-<p>判断は主として内部状態とルールから行われる。</p>
+<p>判断は主として内部状態とルールから行われる。Jev も音を聴かず、言葉と記号にした状態から判断している。</p>
 <h3>長期的な学習</h3>
-<p>試聴結果は人間との開発対話を通してDESIGN.mdとコードへ反映されてきたが、実行中のアプリ自身が「この演奏は良かった」と学習してルールを書き換えるわけではない。</p>
+<p>試聴結果は人間との開発対話を通してDESIGN.mdとコードへ反映されてきたが、実行中のアプリ自身が「この演奏は良かった」と学習してルールを書き換えるわけではない。Jev も、送られた入力をもとに学習することはない。</p>
 <h3>意味的な曲想</h3>
 <p>陰陽やscene personalityはあるが、「悲しみ」「緊張から解放」「夜明け」といった物語意味を理解して作曲しているわけではない。名前は人間が与えた音楽的メタファーである。</p>
+<p>elevator-three では、この領域に少しだけ手が入った。Jev はシーンの性格を言葉で書いた説明と、ここ数分の流れを読んで判断する。ただし、それが「意味を理解した」判断かどうかは、まだ確かめられていない。確かめられるのは、答えの確率と、それを使って鳴らした結果だけである。</p>
 <p>この境界を明確にしておくと、現在のシステムの強さを過大評価せずに済む。</p>
 <h2>12. 将来の開発で、このモデルをどう使えるか</h2>
 <p>新機能を「音を増やすIssue」として考える代わりに、次の問いを使える。</p>
@@ -368,7 +399,7 @@ motif lifeを更新</code></pre>
 <li><strong>どの状態を観察して判断するのか？</strong></li>
 <li><strong>守るべき不変条件は何か？</strong></li>
 <li><strong>候補となる音楽語彙は何か？</strong></li>
-<li><strong>確率に任せる部分と、規則で決める部分はどこか？</strong></li>
+<li><strong>確率に任せる部分と、規則で決める部分はどこか？ 流れを読む必要があるなら、Jev に相談する判断か？ そのとき候補は誰が作り、答えが来ないときはどう決めるか？</strong></li>
 <li><strong>過去の何を記憶する必要があるか？</strong></li>
 <li><strong>いつ忘れるべきか？</strong></li>
 <li><strong>結果は音高・リズム・音色・空間・休止のどこへ作用するか？</strong></li>
@@ -376,24 +407,26 @@ motif lifeを更新</code></pre>
 <li><strong>試聴して何をもって成功と判断するか？</strong></li>
 </ol>
 <p>この10問に答えられれば、新しい仕掛けも既存の音楽システムへ自然に接続しやすい。</p>
-<h2>13. elevator-two の知識モデルを一文で表す</h2>
-<p>elevator-twoは、</p>
-<blockquote><strong>複数の時間階層にわたる音楽状態を保持し、楽器ごとの役割、不変条件、文脈依存規則、確率的嗜好、短期記憶と忘却を使って、反復・変奏・対比・休止をリアルタイムに編成する知識駆動型の自動演奏システム</strong></blockquote>
+<h2>13. elevator-three の知識モデルを一文で表す</h2>
+<p>elevator-threeは、</p>
+<blockquote><strong>複数の時間階層にわたる音楽状態を保持し、楽器ごとの役割、不変条件、文脈依存規則、短期記憶と忘却を使って候補を作り、その重み付けの一部を流れを読む外部のモデルに相談しながら、反復・変奏・対比・休止をリアルタイムに編成する知識駆動型の自動演奏システム</strong></blockquote>
 <p>と捉えることができる。</p>
 <p>ここで最も重要なのは「自動」であることより、<strong>何を知っているから、その判断をしたのかを説明できる</strong>ことだ。</p>
-<p>elevator-two の現在の面白さは、ニューラルネットワークの内部に暗黙知を閉じ込めるのではなく、人間とAIの対話で得た音楽的判断を、かなりの部分まで明示的な規則としてコードに残している点にある。</p>
+<p>elevator-two の面白さは、ニューラルネットワークの内部に暗黙知を閉じ込めるのではなく、人間とAIの対話で得た音楽的判断を、かなりの部分まで明示的な規則としてコードに残している点にあった。elevator-three はその規則を残したまま、モデルに任せる範囲を「候補の重み付け」だけに限った。何を相談し、何を返され、何を使ったかは、monitor にそのまま出る。判断の説明可能性は保たれている。</p>
 <p>それは同時に、次にどんな音楽知識を教えるべきかを、人間が考え続けられる構造でもある。</p>
 <p>---</p>
 <h2>資料</h2>
 <ul>
-<li><code>DESIGN.md</code> — 設計判断 D-1〜D-82 と試聴・実測の履歴</li>
+<li><code>DESIGN.md</code> — elevator-three の設計判断 D-1〜D-12。Jev への相談の仕組みと、本物の Jev で鳴らした結果</li>
+<li><code>two-DESIGN.md</code> — 分岐元 elevator-two の設計判断 two:D-1〜two:D-82 と試聴・実測の履歴</li>
 <li><code>ARCHITECTURE.md</code> — 現行実装</li>
 <li><code>SCENES.md</code> — シーン人格の定義</li>
 </ul>
 <h3>原文から</h3>
-<blockquote>「一律の確率生成やマルコフ連鎖を全トラックに回さない。土台が崩れるかハットがベタになるかのどちらかに落ちるため。」<br>— <code>DESIGN.md</code>, D-7</blockquote>
-<blockquote>「並びを小節ごとに引き直すと、ミニマルに要る反復が出ず、毎小節ばらばらの模様になってしまう。」<br>— <code>DESIGN.md</code>, D-14</blockquote>
-<blockquote>「マンネリの逆は乱数の増量ではなく、主題とその変奏である。」<br>— <code>DESIGN.md</code>, D-75</blockquote>
-<blockquote>「定義が骨格を与え、その内側を自動生成が埋める。」<br>— <code>SCENES.md</code>, 冒頭</blockquote></main>
-<footer class="footer"><div>Based on DESIGN.md / ARCHITECTURE.md / SCENES.md — elevator-two, September 2026.</div></footer>
+<blockquote>「一律の確率生成やマルコフ連鎖を全トラックに回さない。土台が崩れるかハットがベタになるかのどちらかに落ちるため。」<br>— <code>two-DESIGN.md</code>, two:D-7</blockquote>
+<blockquote>「並びを小節ごとに引き直すと、ミニマルに要る反復が出ず、毎小節ばらばらの模様になってしまう。」<br>— <code>two-DESIGN.md</code>, two:D-14</blockquote>
+<blockquote>「マンネリの逆は乱数の増量ではなく、主題とその変奏である。」<br>— <code>two-DESIGN.md</code>, two:D-75</blockquote>
+<blockquote>「定義が骨格を与え、その内側を自動生成が埋める。」<br>— <code>SCENES.md</code>, 冒頭</blockquote>
+<blockquote>「応答が無いとき (遅れた、失敗した、?jev=0) は、two とまったく同じ手元の判断に戻る。」<br>— <code>DESIGN.md</code>, D-4</blockquote></main>
+<footer class="footer"><div>Based on DESIGN.md / two-DESIGN.md / ARCHITECTURE.md / SCENES.md — elevator-three, September 2026.</div></footer>
 </body></html>

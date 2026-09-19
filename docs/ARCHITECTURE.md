@@ -45,19 +45,23 @@ strings の持続音だけは `apply()` と同じ条件で状態として判定�
 `onBar()` が3階層すべての判断を行う。
 
 - **第1層 シーン** — `enterScene()`。長さは `sceneLengthBars()` が `evolution` から決め、
-  16小節の倍数に丸める。切り替えはフレーズの切れ目でのみ起きる
-- **第2層 フレーズ** — `phraseLen` 小節ごとに `nextPhrase()`。型はシーンの重み `w` から引く。
+  16小節の倍数に丸める。切り替えはフレーズの切れ目でのみ起きる。
+  Jev が次のシーンの長さを選んでいれば、その倍率を掛ける (D-8)
+- **第2層 フレーズ** — `phraseLen` 小節ごとに `nextPhrase()`。型は Jev の答えがあればその分布から、無ければシーンの重み `w` から引く (D-8)。
   `build` が続いたら `drop` へ倒すといった並びの制約もここ。
   「展開」を上げると8小節の折り返しでも切り替わることがある。
   **`break` だけは1小節で抜ける** (two:D-24)
 - **第3層 イベント** — 4小節の節目に `maybeEvent()`。フレーズ型で基礎確率が変わり、
-  グリッチ系だけ `glitch` スライダーとシーンの `glitch` で二重に重み付けられる
+  グリッチ系だけ `glitch` スライダーとシーンの `glitch` で二重に重み付けられる。
+  Jev の答えがあれば、どれを起こすか (起こさないかを含む) はその分布から引く (D-8)
+
+どの層でも、Jev の答えを使うのは `jev` スライダーの割合だけで、残りと、答えが無いときは two と同じ手元の判断で決める (D-4 / D-5)。
 
 ## シーン遷移 (two:D-5)
 
 `startTransition()` が入口で、自動の切り替えと「次へ」の両方が通る。
 `pendingScene` に行き先を、`transitionEndBar` に終わりの小節を持つ。
-方式は `chooseTransitionMode()` が確率で選ぶ。
+行き先・方式・次のシーンの長さは、Jev に聞いてあればその分布から引き、無ければ `chooseScene()` と `chooseTransitionMode()` が確率で選ぶ (D-8)。
 
 BPM は `bpmCur` が `bpmTarget()` へ一定の速さ (時定数6秒) で寄る。遷移中は行き先の
 シーンの値が目標になるので、乗り換えの瞬間に拍が飛ばない。
@@ -97,6 +101,10 @@ DJ が次の曲のビートを差し込むのと同じ範囲。
 | `?sparkcut=2` | リフのカットオフの倍率 (two:D-77) を固定し、動きも止める。0.25〜4 |
 | `?sparkrescomp=0.3` | Q の量の補正の係数 (two:D-77) を差し替える。0〜1。係数を往復で比べるのに使う |
 | `?sparklow` | リフのメロディ全体を必ず1オクターブ下げる (two:D-79)。`?sparklow=0` なら下げない |
+| `?jev=0` | Jev に問い合わせない。two と同じ判断で鳴る (D-9) |
+| `?jevurl=` | 中継の URL を差し替える。手元 (localhost / 127.0.0.1) で開いたときの既定は `http://localhost:8787/decide` (D-9) |
+| `?jevlog` | Jev の応答・遅れ・失敗・鳴らしたリフをコンソールに出す (D-9) |
+| `?scenebars=16` | シーンの長さを小節数で固定する。遷移の判断を数分待たずに確かめる (D-9) |
 
 素のままだとリフは毎分1〜2回、ダブは8小節ごとに funk で5割なので、
 聴いて確かめるのに何分もかかる。オカズは8小節ごとに来るが、タムかスネアかを
@@ -164,7 +172,7 @@ DJ が次の曲のビートを差し込むのと同じ範囲。
 
 ## ベース (two:D-10)
 
-two の中核。経路は
+中核。経路は
 `bassSum → bassPre (押し出し) → bassShaper (飽和) → Ladder → bassAmp → bassComp → bassBus`。
 
 - 打点ごとに立てるのは矩形波だけ。±7cent でデチューンした3基と、1オクターブ下のサブ。
@@ -380,7 +388,8 @@ EK (ダーク & サイバネティクス) 固定。テーマの切り替えは�
 点滅は視差効果を減らす設定でも止めない。
 `#pbarpos` の末尾には、いまの小節の装飾 (`dub` / `fill`) が出る。
 
-群は control (master / character / motion)・mixer (drums / bass / harmony / riff / texture) の2つと monitor (two:D-57 / two:D-61)。
+群は control (master / character / motion / tonality / decision)・mixer (drums / bass / harmony / riff / texture) の2つと monitor (two:D-57 / two:D-61)。
+decision 群の `jev` は判断を Jev に任せる割合 (D-5)。雰囲気の操作ではないので、動かしてもシーン名に (edit) を付けない (D-10)。
 `mixGroup()` が群を、`mixSub()` が群の中の小見出し付きの列を作る。
 `reset all` は、`addSlider()` が登録簿 `sliders` に積んだ既定値へ全部戻し、保存した個別の音量を消す。
 陰陽の既定値だけは関数で、いまのシーンの位置を返す。
@@ -406,7 +415,7 @@ MUTE されているか、どれかが SOLO でそれ以外なら 0、そうで�
 上りのゼロ交差を起点にするので、波形が横へ流れずその場で形が変わる。
 鳴っていないときは描かない。
 
-## Jev (D-3〜D-9)
+## Jev (D-3〜D-12)
 
 ```
 index.html                         worker/ (elevator-three-api)            TypeSafe
@@ -424,7 +433,12 @@ onBar(bar) ─ jevTake(name, tag) → jevChoice / jevP → 手元の判断 (two 
   `jevP()` は真偽の問いの確率を返す (D-5)
 - state は `jevState()`。いまの状態と、`histPush()` が積む出来事の履歴 `hist` を渡す (D-6)
 - `jev.status` は off / local / offline / on。3回続けて失敗したら `jev.pauseUntil` まで問い合わせない
+- 問い合わせるかどうか (`jevActive`) は目標値 `target.jev` で決める。滑らかに寄せる `current.jev` は 0 にならないので、それで決めるとスライダーを 0 にしても問い合わせが続く (D-12)
+- やり取りのログ (D-11): `jevAsk()` が1回ごとに `jevEntry()` で件を作り、`jevChoice()` / `jevP()` が使ったものを `jevUsed()` で書き足す。
+  答えのオブジェクトから件を引くのに `WeakMap` (`ansEntry`) を使う。`renderJevLog()` が monitor の `#jevlog` に新しい順で5件まで描く
 
 ## まだ無いもの
 
-ハーモニー3回路 (two:D-9)。スタブ / 持続 / ジャズ・ボッサを順に足していく。
+- 本物の Jev の答えを聴いて、質問文 (`worker/src/decide.js` の `KINDS`) と state の渡し方を詰めること。
+  まずは、4小節の節目の仕掛けで Jev が「何もしない」を5〜7割選ぶ点 (D-10)
+- Jev の `confidence` はまだ使っていない。どこまで委ねるかの手がかりにできる
