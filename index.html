@@ -7,16 +7,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ELEVATOR THREE</title>
 <style>
-  /* ダーク & サイバネティクス (two:D-37)。漆黒の筐体に黄色のアクセント */
+  /* 紫の5色 (D-13)。#d8b2ff / #b266ff / #4500e2 / #3100a2 / #4c0099。
+     two の EK (漆黒に黄色、two:D-37) の構造はそのままに、色だけを差し替えた */
   :root{
-    --bg:#08080A;
-    --panel:rgba(255,255,255,.045);
-    --panel-hi:rgba(255,255,255,.1);
-    --line:rgba(255,255,255,.16);
-    --ink:#F4F4EE;
-    --dim:rgba(244,244,238,.5);
-    --amber:#FFE20A;
-    --scope:rgba(255,226,10,.9);
+    --bg:#3100a2;                    /* 地 */
+    --box:#2a008c;                   /* section・header・footer の地。地より少し沈める */
+    --deep:#4c0099;                  /* ツールチップなど、浮いた箱の地 */
+    --panel:rgba(76,0,153,.55);      /* #4c0099 を地に重ねる */
+    --panel-hi:rgba(69,0,226,.35);
+    --line:rgba(216,178,255,.26);
+    --ink:#d8b2ff;                   /* 文字 */
+    --dim:rgba(216,178,255,.6);
+    --accent:#b266ff;                /* 見出しの帯、つまみ、選択中のもの */
+    --hot:#4500e2;                   /* 押している状態の地。文字は白 */
+    --glow:#d8b2ff;                  /* 点灯 (インジケーター、いま鳴っているステップ) */
+    --white:#ffffff;
+    --err:#ff9ec7;
+    --scope:#d8b2ff;                 /* 波形の線 */
+    --scope-bg:#1c005e;              /* 波形の地 */
+    --scope-grid:rgba(178,102,255,.10);
     --disp:'Helvetica Neue','Arial Narrow',sans-serif;
     --data:'Menlo','Monaco',monospace;
   }
@@ -33,7 +42,7 @@
             env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
   button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
-  :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
   /* ---- header ---- */
   header{
@@ -51,9 +60,9 @@
   .ver{opacity:.6}
   /* about ページへのリンク (two:D-71)。バージョンと同じ小さな字で、触れると黄色に */
   .about{text-decoration:none;opacity:.8;transition:color .16s,opacity .16s}
-  .about:hover,.about:focus-visible{color:var(--amber);opacity:1}
+  .about:hover,.about:focus-visible{color:var(--accent);opacity:1}
   /* 現在のシーン名。one の mood 表示と同じ役割 */
-  .scene{color:var(--amber);opacity:.85}
+  .scene{color:var(--accent);opacity:.85}
   .transport{margin-left:auto;display:flex;gap:.55rem;align-items:center;flex-shrink:0}
   .tbtn{
     border:1px solid var(--line);
@@ -64,7 +73,7 @@
     transition:background .18s,border-color .18s,color .18s;
   }
   .tbtn:hover{background:var(--panel-hi)}
-  .tbtn[data-on="1"]{background:var(--amber);color:#101A22;border-color:var(--amber)}
+  .tbtn[data-on="1"]{background:var(--hot);color:var(--white);border-color:var(--hot)}
   /* 再生 / 一時停止。ロック画面と同じ並びで、現在の状態の側が点灯する */
   .tbtn.xport{display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;padding:0}
   .tbtn.xport .ico{width:.7rem;height:.7rem;fill:currentColor;flex-shrink:0}
@@ -77,18 +86,19 @@
     color:var(--dim);border-bottom:2px solid transparent;
     transition:color .16s,border-color .16s,background .16s;
   }
-  .tab[aria-selected="true"]{color:var(--amber);border-bottom-color:var(--amber);background:rgba(0,0,0,.16)}
+  .tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);background:rgba(0,0,0,.16)}
   .tababout{
     display:flex;align-items:center;flex:none;padding:.62rem 1rem;
     font-size:.66rem;letter-spacing:.2em;color:var(--dim);text-decoration:none;
     border-left:1px solid var(--line);border-bottom:2px solid transparent;transition:color .16s;
   }
-  .tababout:hover,.tababout:focus-visible{color:var(--amber)}
+  .tababout:hover,.tababout:focus-visible{color:var(--accent)}
 
   /* ---- main grid ---- */
+  /* 3カラム (D-14)。左 scene、中央 control と mixer、右 monitor と JEV */
   main{
     flex:1;min-height:0;display:grid;
-    grid-template-columns:minmax(128px,166px) minmax(0,1fr);
+    grid-template-columns:minmax(128px,166px) minmax(0,1fr) minmax(280px,min(30vw,440px));
     gap:1px;background:var(--line);
     border-bottom:1px solid var(--line);
   }
@@ -114,11 +124,11 @@
     transition:color .16s,background .16s,border-color .16s;
   }
   .scenebtn:hover{color:var(--ink);background:var(--panel)}
-  .scenebtn[aria-pressed="true"]{color:var(--amber);border-left-color:var(--amber);background:var(--panel)}
+  .scenebtn[aria-pressed="true"]{color:var(--accent);border-left-color:var(--accent);background:var(--panel)}
   /* 群の見出し。シーンは主回路ごとに固まって並ぶ */
   .group{
     font-size:.55rem;letter-spacing:.26em;text-transform:uppercase;
-    color:rgba(214,226,232,.4);margin:.7rem 0 .3rem;
+    color:var(--dim);margin:.7rem 0 .3rem;
   }
   .group:first-child{margin-top:0}
 
@@ -139,13 +149,13 @@
   }
   /* 背面の波形が透けて見える程度に沈める。文字が読める濃さは保つ */
   .mixgrp{
-    background:rgba(8,8,10,.66);border:1px solid var(--line);
+    background:var(--panel);border:1px solid var(--line);
     padding:.4rem .55rem .15rem;min-width:0;flex:none;
   }
   .mixhead{
     display:flex;align-items:center;justify-content:space-between;gap:.5rem;
     font-size:.58rem;letter-spacing:.26em;text-transform:uppercase;font-weight:700;
-    color:var(--ink);border-left:3px solid var(--amber);padding-left:.4rem;margin-bottom:.45rem;
+    color:var(--ink);border-left:3px solid var(--accent);padding-left:.4rem;margin-bottom:.45rem;
   }
   /* 群の中は小見出し付きの列を並べる (two:D-57) */
   .mixbody{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0 1.1rem;align-items:start}
@@ -159,7 +169,7 @@
     border:1px solid var(--line);padding:.18rem .45rem;color:var(--dim);background:var(--panel);
     transition:color .16s,border-color .16s;
   }
-  .minibtn:hover{color:var(--amber);border-color:var(--amber)}
+  .minibtn:hover{color:var(--accent);border-color:var(--accent)}
   /* SOLO / MUTE (two:D-59)。スライダーと同じ行の右端に置く */
   .srow{display:flex;align-items:center;gap:.25rem}
   .srow input[type=range]{flex:1;min-width:0}
@@ -169,33 +179,54 @@
     transition:color .16s,border-color .16s,background .16s;
   }
   .smbtn:hover{color:var(--ink);border-color:var(--ink)}
-  .smbtn.solo[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:#08080A}
-  .smbtn.mute[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#08080A}
+  .smbtn.solo[aria-pressed="true"]{background:var(--hot);border-color:var(--hot);color:var(--white)}
+  .smbtn.mute[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
   /* SOLO / MUTE で鳴っていない行。ボタンは押し戻せるよう薄くしない */
   .param.silenced>label,.param.silenced input[type=range]{opacity:.35}
 
-  /* ---- control と monitor の横並び (two:D-61) ----
-     狭いと折り返して monitor が control の下に来る */
-  .ctlrow{display:flex;flex-wrap:wrap;gap:.5rem;align-items:stretch}
-  #grp-control{flex:2 1 560px}
-  #monitor{flex:1 1 300px;display:flex;flex-direction:column;gap:.45rem;padding-bottom:.55rem}
+  /* ---- control (中央の卓の先頭) と、右カラムの monitor / JEV (D-14) ---- */
+  .ctlrow{display:flex}
+  #grp-control{flex:1 1 auto;min-width:0}
+  #tab-mon{display:flex;flex-direction:column;gap:.5rem;overflow:hidden}
+  #tab-mon>.eyebrow{display:none}
+  #monitor{flex:none;display:flex;flex-direction:column;gap:.45rem;padding-bottom:.55rem}
+  /* 進行の表示は1行ずつに固定する。折り返すと monitor の高さが内容で変わり、下の JEV が上下に動く。
+     切れた全文はマウスを乗せると出る (showProgress が title に入れる)。狭い画面は1カラムなので折り返してよい */
+  @media (min-width:901px){
+    #monitor .prog>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  }
+  /* JEV は右カラムの残りの高さを取り、中身はその中だけでスクロールする。やり取りが増えても外へ押し出さない */
+  #jev{flex:1 1 0;min-height:0;display:flex;flex-direction:column;padding-bottom:.4rem}
+  #jev .mixhead{flex:none}
+  #jev .rd{font-family:var(--data);font-size:.6rem;letter-spacing:.04em;font-weight:400;text-transform:none;color:var(--dim)}
+  #jev .rd b{color:var(--accent);font-weight:400;margin-right:.6rem}
   #monitor .mixhead{margin-bottom:0}
   #monitor .rd{
     font-family:var(--data);font-size:.6rem;letter-spacing:.04em;font-weight:400;
     text-transform:none;color:var(--dim);
   }
-  #monitor .rd b{color:var(--amber);font-weight:400;margin:0 .7rem 0 .3rem}
+  #monitor .rd b{color:var(--accent);font-weight:400;margin:0 .7rem 0 .3rem}
   #monitor .rd b:last-child{margin-right:0}
-  #cv{display:block;width:100%;height:84px;border:1px solid var(--line);background:#050506}
+  #cv{display:block;width:100%;height:84px;border:1px solid var(--line);background:var(--scope-bg)}
   #monitor .steps,#monitor .prog{margin-top:0}
-  /* Jev とのやり取り (D-11)。1件3行: 問い / 答え / 使ったもの。新しい順 */
-  .jevlog{font-family:var(--data);font-size:.56rem;letter-spacing:.02em;color:var(--dim);
-          display:grid;gap:.3rem;border-top:1px solid var(--line);padding-top:.4rem}
-  .jevlog .e{display:grid;gap:.08rem}
-  .jevlog .e>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .jevlog .a{color:var(--ink)}
-  .jevlog .u{color:var(--amber)}
-  .jevlog .x{color:#8A5A4A}
+  /* Jev とのやり取り (D-15)。1件ごとに、送った query (グレー)、返った result (白)、音楽的に何が起こるか (強調)。新しい順 */
+  .jevlog{
+    flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+    font-family:var(--data);font-size:.56rem;line-height:1.45;letter-spacing:.01em;color:var(--dim);
+    display:flex;flex-direction:column;gap:.55rem;padding-right:.2rem;
+    scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+  }
+  .jevlog .e{display:flex;flex-direction:column;gap:.2rem;padding-bottom:.55rem;border-bottom:1px solid var(--line)}
+  .jevlog .m{color:var(--dim);letter-spacing:.08em}
+  .jevlog pre{margin:0;font:inherit;white-space:pre-wrap;overflow-wrap:anywhere}
+  .jevlog .q{color:#b7b0c4}                /* 送った query。グレー */
+  .jevlog .r{color:var(--white)}           /* 返った result。白 */
+  .jevlog .o{                               /* 音楽的に何が起こるか。強調 */
+    color:var(--glow);font-weight:700;background:var(--hot);
+    border-left:3px solid var(--accent);padding:.18rem .45rem;
+  }
+  .jevlog .x{color:var(--err)}
+  .jevlog .off{color:var(--dim)}
 
   /* ---- 大きな再生ボタンと READ ME FIRST (Issue #1 / two:D-72) ----
      右上の小さなボタンだけでは、まず押さないと鳴らないことに気づけない。
@@ -212,28 +243,28 @@
     position:relative;display:flex;align-items:center;justify-content:center;
     width:clamp(96px,24vmin,176px);height:clamp(96px,24vmin,176px);
     border-radius:50%;
-    background:rgba(8,8,10,.9);   /* 下のスライダーが透けて見えないよう濃くする */
-    border:3px solid var(--amber);
-    color:var(--amber);
-    box-shadow:0 0 0 0 rgba(216,163,64,.45);
+    background:rgba(42,0,140,.92);   /* 下のスライダーが透けて見えないよう濃くする */
+    border:3px solid var(--accent);
+    color:var(--accent);
+    box-shadow:0 0 0 0 rgba(178,102,255,.45);
     transition:background .18s,color .18s,transform .18s,box-shadow .6s;
     animation:bigpulse 2.6s ease-out infinite;
   }
   #bigplay svg{width:44%;height:44%;fill:currentColor;margin-left:8%}
-  #bigplay:hover{background:var(--amber);color:#101A22;transform:scale(1.06)}
+  #bigplay:hover{background:var(--hot);color:var(--white);transform:scale(1.06)}
   #readme{
     font-size:clamp(1rem,3.4vmin,1.7rem);letter-spacing:.32em;font-weight:700;white-space:nowrap;
-    color:var(--amber);text-decoration:none;
+    color:var(--accent);text-decoration:none;
     padding:.45em .5em .45em .82em;   /* 字間のぶん右が空くので、左を少し広く取って見た目の中央を揃える */
-    background:#0B0B0D;border:1px solid rgba(255,226,10,.45);   /* 下の文字が透けないよう不透明にする */
+    background:var(--box);border:1px solid rgba(178,102,255,.55);   /* 下の文字が透けないよう不透明にする */
     transition:background .16s,color .16s;
   }
-  #readme:hover,#readme:focus-visible{background:var(--amber);color:#08080A}
+  #readme:hover,#readme:focus-visible{background:var(--hot);color:var(--white)}
   /* 気づいてもらうための呼吸。控えめに一度ずつ広がる */
   @keyframes bigpulse{
-    0%{box-shadow:0 0 0 0 rgba(216,163,64,.45)}
-    70%{box-shadow:0 0 0 18px rgba(216,163,64,0)}
-    100%{box-shadow:0 0 0 0 rgba(216,163,64,0)}
+    0%{box-shadow:0 0 0 0 rgba(178,102,255,.45)}
+    70%{box-shadow:0 0 0 18px rgba(178,102,255,0)}
+    100%{box-shadow:0 0 0 0 rgba(178,102,255,0)}
   }
   @media (prefers-reduced-motion:reduce){
     #bigplay{animation:none}
@@ -242,7 +273,7 @@
   /* ---- tooltip ---- */
   #tip{
     position:fixed;z-index:60;max-width:15rem;pointer-events:none;
-    background:#16222C;border:1px solid var(--line);
+    background:var(--deep);border:1px solid var(--line);
     color:var(--ink);font-size:.68rem;line-height:1.6;letter-spacing:.05em;
     padding:.45rem .65rem;opacity:0;transition:opacity .12s;
   }
@@ -255,13 +286,13 @@
     display:flex;justify-content:space-between;align-items:baseline;
     font-size:.72rem;letter-spacing:.16em;margin-bottom:.18rem;
   }
-  .param .val{font-family:var(--data);font-size:.65rem;color:var(--amber);letter-spacing:.04em}
+  .param .val{font-family:var(--data);font-size:.65rem;color:var(--accent);letter-spacing:.04em}
   /* 発音インジケーター (two:D-82)。鳴っている間だけ灯る。名前の直後に置き、値は右端に残す */
   .led{
     flex:none;align-self:center;width:.42rem;height:.42rem;border-radius:50%;
     margin:0 auto 0 .4rem;background:var(--line);transition:background .05s,box-shadow .05s;
   }
-  .led.on{background:var(--amber);box-shadow:0 0 .35rem var(--amber)}
+  .led.on{background:var(--glow);box-shadow:0 0 .35rem var(--glow)}
   input[type=range]{
     -webkit-appearance:none;appearance:none;width:100%;height:14px;background:transparent;
   }
@@ -270,7 +301,7 @@
     -webkit-appearance:none;width:9px;height:14px;margin-top:-7px;
     background:var(--ink);border:none;border-radius:0;
   }
-  input[type=range]:hover::-webkit-slider-thumb{background:var(--amber)}
+  input[type=range]:hover::-webkit-slider-thumb{background:var(--accent)}
   input[type=range]::-moz-range-track{height:1px;background:var(--line)}
   input[type=range]::-moz-range-thumb{width:9px;height:14px;background:var(--ink);border:none;border-radius:0}
 
@@ -281,14 +312,14 @@
     justify-content:space-between;background:var(--panel);
   }
   .lamp{width:8px;height:8px;border-radius:50%;background:var(--line);transition:background .2s,box-shadow .2s}
-  .toggle[aria-pressed="true"] .lamp{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+  .toggle[aria-pressed="true"] .lamp{background:var(--glow);box-shadow:0 0 8px var(--glow)}
   .mixsub .toggle{margin-bottom:.45rem}
   .mixsubhead:not(:first-child){margin-top:.7rem}
   /* 点滅 (two:D-62 / two:D-63)。シーンが変わる直前の小節のシーン名、押してから乗り換わるまでの next、有効な間の loop bar。
      合図そのものなので、視差効果を減らす設定でも止めない */
   @keyframes blink{50%{opacity:.25}}
   .blink{animation:blink .5s steps(1,end) infinite}
-  .toggle.blink .lamp{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+  .toggle.blink .lamp{background:var(--glow);box-shadow:0 0 8px var(--glow)}
 
   /* ---- ステップ列 ----
      16ステップ = 1小節。4拍目ごとに区切りを入れ、いま鳴っている位置を琥珀で示す */
@@ -300,9 +331,9 @@
   .steps i{display:block;background:var(--line);height:22%;transition:background .1s,box-shadow .1s}
   .steps i.beat{height:44%}
   /* 何が鳴る位置かを高さと色で示す。on = キックやスネア、hat = ハット */
-  .steps i.hat{background:#4D5A63;height:34%}
-  .steps i.on{background:#707C5D;height:66%}
-  .steps i.now{background:var(--amber);box-shadow:0 0 7px rgba(216,163,64,.65)}
+  .steps i.hat{background:rgba(178,102,255,.45);height:34%}
+  .steps i.on{background:var(--hot);height:66%}
+  .steps i.now{background:var(--glow);box-shadow:0 0 7px rgba(216,178,255,.7)}
   .seqhead{display:flex;justify-content:space-between;align-items:baseline;margin-top:1.4rem}
 
   /* ---- 進行の表示 ----
@@ -312,7 +343,7 @@
     color:var(--dim);margin-top:.55rem;display:grid;gap:.18rem;
   }
   .prog b{color:var(--ink);font-weight:400}
-  .prog .ev{color:var(--amber)}
+  .prog .ev{color:var(--accent)}
 
   /* ---- readout ---- */
   footer{
@@ -347,6 +378,8 @@
     main[data-tab]>section{display:none}
     main[data-tab="scene"] #tab-scene{display:block}
     main[data-tab="param"] #tab-mix{display:flex;flex-direction:column}
+    main[data-tab] #tab-mon{display:none}   /* #tab-mon は ID で display:flex を持つので、ここで明示して隠す */
+    main[data-tab="monitor"] #tab-mon{display:flex}
     .smbtn{width:1.7rem;height:1.4rem;font-size:.6rem}   /* 指で押せる大きさ */
     footer{padding:.42rem .8rem}
     footer .note{display:none}
@@ -369,14 +402,14 @@
      ============================================================ */
 
   header,
-  footer{background:#0B0B0D}
+  footer{background:var(--box)}
   /* パネルのシルク印刷。各セクションを独立したモジュールとして細い線で囲む */
-  section{background:#0B0B0D;padding:.7rem .8rem .9rem}
+  section{background:var(--box);padding:.7rem .8rem .9rem}
   section>.eyebrow{
-    border:1px solid var(--line);border-left:3px solid var(--amber);
+    border:1px solid var(--line);border-left:3px solid var(--accent);
     padding:.22rem .4rem;font-weight:700;letter-spacing:.24em;color:var(--ink);
   }
-  .seqhead .eyebrow{border:1px solid var(--line);border-left:3px solid var(--amber);padding:.22rem .4rem}
+  .seqhead .eyebrow{border:1px solid var(--line);border-left:3px solid var(--accent);padding:.22rem .4rem}
   #scenes,
   .prog{
     border:1px solid var(--line);padding:.5rem .55rem;margin-top:.5rem;
@@ -387,20 +420,20 @@
   }
   .steps i{
     height:18px !important;border-radius:2px;
-    background:#141416;border:1px solid rgba(255,255,255,.13);
+    background:var(--box);border:1px solid rgba(216,178,255,.18);
   }
-  .steps i.hat{background:#1D2226}
-  .steps i.on{background:#2A2A16;border-color:rgba(255,226,10,.4)}
+  .steps i.hat{background:rgba(178,102,255,.28)}
+  .steps i.on{background:var(--hot);border-color:rgba(178,102,255,.6)}
   .steps i.now{
-    background:var(--amber);border-color:var(--amber);
-    box-shadow:0 0 10px rgba(255,226,10,.75),inset 0 0 6px rgba(255,255,255,.5);
+    background:var(--glow);border-color:var(--glow);
+    box-shadow:0 0 10px rgba(216,178,255,.8),inset 0 0 6px rgba(255,255,255,.5);
   }
   .lamp{border-radius:2px;width:9px;height:9px}
-  .toggle[aria-pressed="true"] .lamp{box-shadow:0 0 9px var(--amber)}
-  input[type=range]::-webkit-slider-thumb{background:var(--amber);width:7px;height:16px;margin-top:-8px}
-  .tbtn[data-on="1"]{background:var(--amber);color:#08080A}
-  .scene{color:var(--amber)}
-  #tip{background:#101012}
+  .toggle[aria-pressed="true"] .lamp{box-shadow:0 0 9px var(--glow)}
+  input[type=range]::-webkit-slider-thumb{background:var(--accent);width:7px;height:16px;margin-top:-8px}
+  .tbtn[data-on="1"]{background:var(--hot);color:var(--white)}
+  .scene{color:var(--accent)}
+  #tip{background:var(--deep)}
 
 </style>
 </head>
@@ -427,6 +460,7 @@
 <nav class="tabs" id="tabs">
   <button class="tab" data-tab="scene" aria-selected="false">scene</button>
   <button class="tab" data-tab="param" aria-selected="true">param</button>
+  <button class="tab" data-tab="monitor" aria-selected="false">monitor</button>
   <!-- 狭い画面では about のリンクをヘッダーからここへ移す (two:D-71)。切り替えのタブではないので .tab にはしない -->
   <a class="tababout" href="about.html" target="_blank" rel="noopener">about</a>
 </nav>
@@ -450,35 +484,40 @@
 
   <section class="plane-wrap" id="tab-mix">
     <div class="eyebrow">param</div>
-    <!-- スライダー卓 (two:D-54)。XYパッドの跡地。群と monitor を並べる -->
+    <!-- スライダー卓 (two:D-54)。XYパッドの跡地。control と mixer の群を並べる (D-14) -->
     <div class="console" id="console">
-      <!-- スライダーの群は本体が並べる。control は monitor の前へ差し込む -->
+      <!-- スライダーの群は本体が並べる。control は先頭の行へ差し込む -->
       <div class="mixer" id="mixer">
-        <div class="ctlrow" id="ctlrow">
-          <!-- monitor (two:D-61)。BPM と小節、波形、ステップ列、進行の表示を集める -->
-          <div class="mixgrp" id="monitor">
-            <div class="mixhead"><span>monitor</span><span class="rd">BPM<b id="rbpm">—</b>bar<b id="rbar">—</b></span></div>
-            <canvas id="cv"></canvas>
-            <div class="steps" id="steps"></div>
-            <div class="prog">
-              <div><span>phrase</span> <b id="pphrase">—</b> <span id="pbarpos"></span></div>
-              <div><span>event</span> <b class="ev" id="pevent">—</b></div>
-              <div><span>dark-bright wave</span> <b id="pwave">—</b></div>
-              <div><span>key</span> <b id="pkey">—</b> <span id="pchord"></span></div>
-              <!-- Jev の状態と、直近に Jev が決めたこと (D-9) -->
-              <div><span>jev</span> <b id="pjev">—</b> <span id="pjevd"></span></div>
-            </div>
-            <!-- Jev に何を問い、何が返り、何を使ったか (D-11) -->
-            <div class="jevlog" id="jevlog"></div>
-          </div>
-        </div>
+        <div class="ctlrow" id="ctlrow"></div>
       </div>
+    </div>
+  </section>
+
+  <!-- 右カラム (D-14)。monitor と JEV。JEV のログが増えても、伸びるのはこのカラムの中だけ -->
+  <section id="tab-mon">
+    <div class="eyebrow">monitor</div>
+    <!-- monitor (two:D-61)。BPM と小節、波形、ステップ列、進行の表示を集める -->
+    <div class="mixgrp" id="monitor">
+      <div class="mixhead"><span>monitor</span><span class="rd">BPM<b id="rbpm">—</b>bar<b id="rbar">—</b></span></div>
+      <canvas id="cv"></canvas>
+      <div class="steps" id="steps"></div>
+      <div class="prog">
+        <div><span>phrase</span> <b id="pphrase">—</b> <span id="pbarpos"></span></div>
+        <div><span>event</span> <b class="ev" id="pevent">—</b></div>
+        <div><span>dark-bright wave</span> <b id="pwave">—</b></div>
+        <div><span>key</span> <b id="pkey">—</b> <span id="pchord"></span></div>
+      </div>
+    </div>
+    <!-- JEV (D-15)。Jev とのやり取りだけを出す。送った query (グレー)、返った result (白)、音楽的に何が起こるか (強調) -->
+    <div class="mixgrp" id="jev">
+      <div class="mixhead"><span>jev</span><span class="rd"><b id="pjev">—</b><span id="pjevd"></span></span></div>
+      <div class="jevlog" id="jevlog"></div>
     </div>
   </section>
 </main>
 
 <footer>
-  <span class="note">Green steps are kick and snare, blue are hats.</span>
+  <span class="note">Blue-violet steps are kick and snare, faint purple ones are hats.</span>
 </footer>
 
 <!-- 大きな再生ボタンと about への案内。止まっている間だけ、画面全体の中央に出す (Issue #1 / two:D-72) -->
@@ -495,7 +534,7 @@
 (() => {
 "use strict";
 
-const VERSION='v0.2';
+const VERSION='v0.3';
 /* コミット番号 (two:D-81)。git archive で配ると、.gitattributes の export-subst が
    ここを HEAD の短いハッシュに置き換える。手元で直接開いたときは置き換わらないので出さない。
    git はファイル中の同じ書式をすべて置き換えるので、この書式はここ以外に書かないこと */
@@ -1166,10 +1205,10 @@ const LUSH_PROGS={
 const LUSH_CHORD_BARS=4;   // 開いた和声の中ではゆっくり。two:D-67 で8から半分に
 let lushOn=false;          // いまの進行が開いた和声か
 // 開いた和声を使うかを引き直す。変わったら true を返す
-// p は Jev の答えを混ぜた確率 (D-8)。渡さなければ手元の lush スライダーの値
-function rollLush(p=current.lush){
+// hit は Jev の答えを混ぜて引いた結果 (D-8)。渡さなければ手元の lush スライダーの値で引く
+function rollLush(hit){
   const was=lushOn, c=circuit();
-  lushOn = (c==='jazz' || c==='sustain') && Math.random()<p;
+  lushOn = (c==='jazz' || c==='sustain') && (hit ?? Math.random()<current.lush);
   return was!==lushOn;
 }
 const chordBars = () => lushOn ? LUSH_CHORD_BARS : CHORD_BARS[circuit()];
@@ -2396,7 +2435,11 @@ function nextPhrase(){
   phraseLen = p==='break' ? BREAK_BARS : PHRASE_BARS;   // ブレイクだけは1小節で抜ける
   reseedPattern();
   // 開いた和声 (two:D-66) を引き直し、変わったら進行ごと選び直す
-  if(chordAt>-900 && rollLush(jevP(jevNow.shift,'lush',current.lush,Math.min(1,current.lush/.5)))){
+  // シーンに入った直後 (chordAt<=-900) は pickProg() が引くので、ここでは引かない
+  const c=circuit(), lushOk=chordAt>-900 && (c==='jazz' || c==='sustain');
+  const lushHit = lushOk && jevRoll(jevNow.shift,'lush',current.lush,Math.min(1,current.lush/.5));
+  if(lushOk) jevRolled(lushHit ? 'open, tension-rich voicings' : 'plain voicings');   // D-15
+  if(chordAt>-900 && rollLush(lushHit)){
     pickProg({roll:false}); chordAt=-999;
   }
   // ジャズ / ボッサ回路は主役シーンだけでなく、他のシーンへも短く差し込む (two:D-9)
@@ -2807,12 +2850,15 @@ function planDub(bar){
   // 指定があるときは周期も4小節まで詰めて、シーンの種類も問わない
   const every = forcedDub===null ? 8 : 4;
   if(bar%every!==0 || phrase==='break' || pendingScene>=0) return;
-  const p = forcedDub!==null ? forcedDub
-          : jevP(jevNow.phrase,'dub',SCENES[sceneIdx].group==='funk' ? .50 : .20);   // D-8
-  if(Math.random()>=p) return;
+  if(forcedDub!==null){ if(Math.random()>=forcedDub) return; }
+  else if(!jevRoll(jevNow.phrase,'dub',SCENES[sceneIdx].group==='funk' ? .50 : .20)){   // D-8
+    jevRolled('no dub');   // D-15
+    return;
+  }
   // 判定した範囲から4小節区間をひとつ引き、その4小節めか2小節めに置く
   const blk=Math.floor(Math.random()*(every/4));
   dubAt = bar + blk*4 + (Math.random()<.6 ? 3 : 1);
+  jevRolled(`dub at bar ${dubAt}`);
 }
 
 /* 出口のオカズ。最後の16分4個に置く。
@@ -3613,7 +3659,7 @@ const JEV_URL = QS.get('jevurl')
                                                           : 'https://three-api.elevator-noise.com/decide');
 const JEV_FAILS=3, JEV_PAUSE=32;   // 続けて3回失敗したら32小節は問い合わせない
 const jev={status:JEV_OFF?'off':'local', ms:null, fails:0, pauseUntil:-1,
-           used:0, local:0, last:'', book:{}, inflight:{}, nextLen:null, nextLush:false};
+           used:0, local:0, last:'', book:{}, inflight:{}, nextLen:null, nextLush:false, roll:null};
 const jevLog=(...a)=>{ if(JEV_LOG) console.log('[jev]',...a); };
 const jevInfl=()=>JEV_OFF ? 0 : current.jev;
 /* 問い合わせるかどうかは目標値 (target) で決める。current は目標へ滑らかに寄せる値で、
@@ -3648,55 +3694,72 @@ function jevState(extra){
   };
 }
 
-/* ---- やり取りのログ (D-11) ----
-   問い合わせ1回を1件とし、問い・答え・使ったものを monitor に出す。
-   答えの answers から件を引けるようにしておき、jevChoice / jevP が使ったものを書き足す */
-const JEV_LOG_MAX=5;
+/* ---- JEV セクション (D-15、D-11 を置き換えた) ----
+   問い合わせ1回を1件とし、実際に送った query の JSON (グレー)、返った result の JSON (白)、
+   その結果音楽的に何が起こるか (強調) を、右カラムの JEV に新しい順で出す。
+   答えの answers から件を引けるようにしておき、jevChoice / jevRoll が何が起こるかを書き足す */
+const JEV_LOG_MAX=20;
 const jevEntries=[], ansEntry=new WeakMap();
 const pct=p=>Math.round(p*100)+'%';
-function fmtAsk(ask){
-  return Object.entries(ask).map(([q,o])=>o===true ? q+'?' : `${q}(${Object.keys(o).length})`).join(' ');
-}
-function fmtAnswers(ans){
-  return Object.entries(ans).map(([q,a])=>{
-    if(!a.probs) return `${q} ${pct(a.p)}`;
-    const top=Object.entries(a.probs).sort((x,y)=>y[1]-x[1]).slice(0,3);
-    return q+' '+top.map(([k,p])=>`${k} ${pct(p)}`).join(' / ');
-  }).join(' · ') || '(no answer)';
+/* JSON の整形。深さ2までは改行と字下げ、それより深いものは1行に畳む。
+   送る state は履歴を含んで長いので、全部を開くと1件が100行を超える */
+function fmtJson(v,depth=0,ind=''){
+  if(v===null || typeof v!=='object' || depth>=2) return JSON.stringify(v);
+  const pad=ind+'  ';
+  const items = Array.isArray(v)
+    ? v.map(x=>pad+fmtJson(x,depth+1,pad))
+    : Object.entries(v).map(([k,x])=>pad+JSON.stringify(k)+': '+fmtJson(x,depth+1,pad));
+  if(!items.length) return Array.isArray(v) ? '[]' : '{}';
+  const [o,c]=Array.isArray(v) ? ['[',']'] : ['{','}'];
+  return o+'\n'+items.join(',\n')+'\n'+ind+c;
 }
 function renderJevLog(){
   const el=document.getElementById('jevlog');
   if(!el) return;
-  if(JEV_OFF){ el.textContent='jev off — nothing is asked'; return; }
+  if(JEV_OFF){ el.replaceChildren(Object.assign(document.createElement('div'),{className:'off',textContent:'jev off — nothing is asked'})); return; }
   el.replaceChildren(...jevEntries.map(e=>{
     const box=document.createElement('div'); box.className='e';
-    const line=(cls,text)=>{ const d=document.createElement('div'); if(cls) d.className=cls; d.textContent=text; box.appendChild(d); };
-    line('',`bar ${e.bar} ${e.name} → by ${e.deadline}  ${fmtAsk(e.ask)}  [${e.ctx}]`);
-    line(e.status==='ok' ? 'a' : e.status==='waiting' ? '' : 'x',
-      e.status==='waiting' ? '… waiting'
-      : e.status==='ok'     ? `← ${e.ms}ms  ${fmtAnswers(e.answers)}`
-      : e.status==='late'   ? `← ${e.ms}ms  late, discarded`
-      : e.status==='stale'  ? `← ${e.ms}ms  ${fmtAnswers(e.answers)}  (not used: moment passed)`
-      :                       `✕ ${e.error}`);
-    if(e.used.length) line('u','used  '+e.used.join(' · '));
-    box.title=JSON.stringify({ask:e.ask, answers:e.answers}, null, 1).slice(0,3000);
+    const add=(tag,cls,text)=>{ const d=document.createElement(tag); d.className=cls; d.textContent=text; box.appendChild(d); };
+    add('div','m',`bar ${e.bar} · ${e.name} · for bar ${e.deadline}${e.ms!=null ? ` · ${e.ms}ms` : ''}`);
+    add('pre','q',e.qtxt || (e.qtxt=fmtJson(e.req)));
+    if(e.status==='waiting') add('div','m','… waiting');
+    else if(e.status==='failed') add('div','x',`✕ ${e.error}`);
+    else add('pre','r',e.rtxt || (e.rtxt=fmtJson(e.res)));
+    if(e.status==='late' || e.status==='stale')
+      add('div','o',`discarded (${e.status==='late' ? 'arrived too late' : 'the moment passed'}) — local rules decide`);
+    for(const t of e.out) add('div','o',t);
     return box;
   }));
 }
-function jevEntry(name,deadline,ask,state){
-  const e={bar:barCount, name, deadline, ask, status:'waiting', ms:null, answers:null, used:[], error:'',
-           ctx:`${state.scene.id} ${state.phrase.now} ${state.key}`};
+function jevEntry(name,deadline,req){
+  const e={bar:barCount, name, deadline, req, res:null, status:'waiting', ms:null, error:'', out:[]};
   jevEntries.unshift(e);
   if(jevEntries.length>JEV_LOG_MAX) jevEntries.pop();
   renderJevLog();
   return e;
 }
-// 使ったものを書き足す。local は、答えはあったが割合で手元の判断に回したもの
-function jevUsed(ans,text){
+// 音楽的に何が起こるかを書き足す
+function jevOutcome(ans,text){
   const e=ans && ansEntry.get(ans);
   if(!e) return;
-  e.used.push(text);
+  e.out.push(text);
   renderJevLog();
+}
+// 選んだ選択肢を、音楽の言葉にする
+const MODE_NAME={break:'break', mix:'DJ mix', morph:'morph'};
+function describeChoice(qid,k,e){
+  const desc = e && e.req.ask[qid] && e.req.ask[qid][k];
+  switch(qid){
+    case 'next':{ const sc=SCENES.find(x=>x.id===k); return `next scene: ${k}`+(sc ? ` (${GROUP_LABEL[sc.group]})` : ''); }
+    case 'mode':   return `transition: ${MODE_NAME[k]||k}`;
+    case 'length': return `next scene length: ${k} (×${LEN_MUL[k]})`;
+    case 'key':    return `key: ${desc ? desc.split(':')[0] : k}`;
+    case 'prog':   return `progression: ${desc||k}`;
+    case 'phrase': return `next phrase: ${PHRASE_LABEL[k]||k} at bar ${barCount}`;
+    case 'event':  return k==='none' ? `no event at bar ${barCount}` : `event: ${EVENT_LABEL[k]||k} at bar ${barCount}`;
+    case 'riff':   return `riff: ${desc||k}`;
+    default:       return `${qid}: ${k}`;
+  }
 }
 
 /* 問い合わせる。name は予約の名前、tag はその判断を使う場面 (小節など)。
@@ -3708,17 +3771,17 @@ function jevAsk(name,kind,{tag,deadline,ask,extra,onAnswer}){
   const timer=setTimeout(()=>ac.abort(),budget);
   const t0=performance.now();
   jev.inflight[name]=true;
-  const state=jevState(extra);
-  const entry=jevEntry(name,deadline,ask,state);
+  const req={kind, state:jevState(extra), ask};
+  const entry=jevEntry(name,deadline,req);
   fetch(JEV_URL,{method:'POST', headers:{'Content-Type':'application/json'},
-                 body:JSON.stringify({kind, state, ask}), signal:ac.signal})
+                 body:JSON.stringify(req), signal:ac.signal})
     .then(r=>r.ok ? r.json() : Promise.reject(new Error('HTTP '+r.status)))
     .then(d=>{
       jev.ms=Math.round(performance.now()-t0); jev.fails=0; jev.status='on';
-      entry.ms=jev.ms;
+      entry.ms=jev.ms; entry.res=d;
       if(barCount>=deadline){ entry.status='late'; renderJevLog(); jevLog('late',name,jev.ms+'ms'); return; }
       const answers=(d && d.answers) || {};
-      entry.status='ok'; entry.answers=answers; ansEntry.set(answers,entry);
+      entry.status='ok'; ansEntry.set(answers,entry);
       renderJevLog();
       jev.book[name]={tag, answers};
       jevLog(name,'@'+tag,jev.ms+'ms',answers);
@@ -3763,30 +3826,29 @@ function jevChoice(ans,qid,allowed=()=>true,{always=false}={}){
   const k = (a && a.probs && (always || Math.random()<jevInfl())) ? sampleProbs(a.probs,allowed) : null;
   if(k===null){
     jev.local++;
-    if(a && a.probs) jevUsed(ans,`${qid} → local`);
+    if(a && a.probs) jevOutcome(ans,`${qid}: decided by local rules`);
     return null;
   }
   jev.used++;
   jev.last=`${qid} ${k} ${Math.round(a.probs[k]*100)}%`;
-  // リフは記号 (r0〜r5) では分からないので旋律を添える
-  const e=ansEntry.get(ans);
-  const desc = qid==='riff' && e ? ' '+e.ask.riff[k] : '';
-  jevUsed(ans,`${qid} ${k}${desc}`);
+  jevOutcome(ans,describeChoice(qid,k,ansEntry.get(ans)));
   return k;
 }
-/* 真偽の問いの確率。gate は、スライダー (shift / lush) を 0 にしたら出さないという約束を
-   Jev の側でも守るための倍率 */
-function jevP(ans,qid,localP,gate=1){
-  const a=ans && ans[qid];
-  if(!a || typeof a.p!=='number' || Math.random()>=jevInfl()){
-    jev.local++;
-    if(a && typeof a.p==='number') jevUsed(ans,`${qid} → local`);
-    return localP;
-  }
-  jev.used++;
-  jev.last=`${qid} ${Math.round(a.p*100)}%`;
-  jevUsed(ans,`${qid} p=${pct(clamp(a.p*gate))}`);
-  return clamp(a.p*gate);
+/* 真偽の問いを引く。jev スライダーの割合で Jev の確率、残りは手元の確率 localP で引き、結果を返す。
+   gate は、スライダー (shift / lush) を 0 にしたら出さないという約束を Jev の側でも守るための倍率。
+   引いた結果が音楽的に何を起こしたかは、呼び手が決めたあとに jevRolled() で書き足す */
+function jevRoll(ans,qid,localP,gate=1){
+  const a=ans && ans[qid], has = !!a && typeof a.p==='number';
+  const byJev = has && Math.random()<jevInfl();
+  const p = byJev ? clamp(a.p*gate) : localP;
+  if(byJev){ jev.used++; jev.last=`${qid} ${pct(p)}`; } else jev.local++;
+  if(has && !byJev) jevOutcome(ans,`${qid}: decided by local rules`);
+  jev.roll = byJev ? {ans, p} : null;
+  return Math.random()<p;
+}
+function jevRolled(text){
+  const r=jev.roll; jev.roll=null;
+  if(r) jevOutcome(r.ans,`${text} (p=${pct(r.p)})`);
 }
 
 /* ---- 問い合わせの予定 (D-7) ----
@@ -3929,11 +3991,13 @@ function onBar(bar,time){
   if((inPhrase>=phraseLen || early) && pendingScene<0) nextPhrase();
   // 平行移動の転調 (two:D-65)。8小節の節目で、形を保ったまま根音をずらす。遷移中は動かさない。
   // ずらしたら、進行の位置はそのままに和音を組み直す
-  if(pendingScene<0 && bar>0 && (bar-phraseStartBar)%8===0
-     && Math.random()<jevP(jevNow.shift,'shift',current.shift,Math.min(1,current.shift/.5))){
-    shiftOff = (shiftOff!==0 && Math.random()<.5) ? 0 : wrapShift(shiftOff+pick(SHIFT_STEPS));
-    chordRevoice=true;
-    histPush('keys',{key:keyName(tonic()), shift:true});
+  if(pendingScene<0 && bar>0 && (bar-phraseStartBar)%8===0){
+    if(jevRoll(jevNow.shift,'shift',current.shift,Math.min(1,current.shift/.5))){
+      shiftOff = (shiftOff!==0 && Math.random()<.5) ? 0 : wrapShift(shiftOff+pick(SHIFT_STEPS));
+      chordRevoice=true;
+      histPush('keys',{key:keyName(tonic()), shift:true});
+      jevRolled(`key shifts to ${keyName(tonic())} at bar ${bar}`);   // D-15
+    }else jevRolled(`key stays at bar ${bar}`);
   }
   // 和音を進める。間隔は回路ごとに違い、スタブはほとんど動かない (two:D-9)
   if(bar-chordAt>=chordBars()){
@@ -4071,10 +4135,13 @@ loopBtn.addEventListener('click',()=>{
 
 /* ---- 見た目 (two:D-37) ----
    テーマは EK 固定。切り替えは廃止した (2026-09-12)。
-   波形の色 (--scope) は CSS が持つ。毎フレーム getComputedStyle を呼ぶと重いので、起動時に1度だけ拾う。
+   波形の色 (--scope)・地 (--scope-bg)・拍の明滅 (--accent) は CSS が持つ (D-13)。
+   毎フレーム getComputedStyle を呼ぶと重いので、起動時に1度だけ拾う。
    scopeColorCache の宣言より前にあるので、実行は初期化の列から行う */
 function readLook(){
-  scopeColorCache=getComputedStyle(document.documentElement).getPropertyValue('--scope').trim();
+  const cs=getComputedStyle(document.documentElement);
+  scopeColorCache=cs.getPropertyValue('--scope').trim();
+  scopeBgCache=cs.getPropertyValue('--scope-bg').trim();
 }
 
 /* ---- スライダー卓 (two:D-54 / two:D-57) ----
@@ -4082,7 +4149,6 @@ function readLook(){
    群の中は小見出し付きの列に分ける。monitor は HTML にあり、control はその前へ差し込む (two:D-61) */
 const mixerEl=document.getElementById('mixer');
 const ctlRowEl=document.getElementById('ctlrow');
-const monitorEl=document.getElementById('monitor');
 const inputs={};
 const sliders=[];     // reset all が戻す先。{r, def, onInput}
 let dragging=false;   // 陰陽のスライダーを掴んでいる間は、波が目標を奪わない (two:D-13)
@@ -4189,7 +4255,7 @@ function mixSlider(host,key){
   soloMuteRows[key]=row.parentElement;
 }
 
-const controlBody=mixGroup('control',ctlRowEl,monitorEl);
+const controlBody=mixGroup('control',ctlRowEl);
 {
   const g=mixSub(controlBody,'master');
   // 音量は出力そのものなので 0〜100。雰囲気の手動操作ではないため (edit) は付けない
@@ -4274,6 +4340,7 @@ const pWave=document.getElementById('pwave');
 const pKey=document.getElementById('pkey');
 const pChord=document.getElementById('pchord');
 const pJev=document.getElementById('pjev'), pJevD=document.getElementById('pjevd');
+const progRows=[...document.querySelectorAll('#monitor .prog>div')];
 renderJevLog();   // jev=0 のときはその旨を出す (D-11)
 function showProgress(){
   pPhrase.textContent=(PHRASE_LABEL[phrase]||phrase)
@@ -4310,6 +4377,7 @@ function showProgress(){
   pJev.textContent = JEV_OFF || target.jev<=0 ? 'off' : jev.status+(jev.ms!=null ? ` ${jev.ms}ms` : '');
   pJevD.textContent = `${jev.used} jev / ${jev.local} local${jev.last ? '  '+jev.last : ''}`;
   pChord.textContent=`${NOTE_NAMES[(tonic()+chordDeg)%12]}${q}  [${CIRCUIT_LABEL[circuit()]}${lushOn?' lush':''}${mode}${epGuest?' + ep':''}]${bs}${nz}`;
+  for(const row of progRows) row.title=row.textContent;   // 1行に切った全文 (D-14)
 }
 
 /* ---- monitor の波形 (two:D-36 / two:D-61) ----
@@ -4358,12 +4426,15 @@ function updateLeds(){
   }
 }
 
+// 波形の色。テーマを変えたときに拾い直す
+let scopeColorCache='', scopeBgCache='';
+function scopeColor(){ return scopeColorCache || '#d8b2ff'; }
 function draw(){
   requestAnimationFrame(draw);
   updateLeds();   // キャンバスが隠れている (狭い画面の別タブ) ときも回す
   const w=cv.clientWidth, h=cv.clientHeight;
   if(!w||!h) return;
-  g2.fillStyle='#050506'; g2.fillRect(0,0,w,h);
+  g2.fillStyle=scopeBgCache||'#1c005e'; g2.fillRect(0,0,w,h);
 
   // 波形。いま出ている音をそのまま横に引き伸ばして描く。
   // 立ち上がりが左端に来るよう、上りのゼロ交差を探して起点にする
@@ -4388,15 +4459,12 @@ function draw(){
 
   // 拍の明滅。無音の段階でも拍が見えるようにしておく
   if(uiStep>=0 && uiStep%4===0){
-    g2.fillStyle=`rgba(216,163,64,${.05+ (uiStep===0?.05:0)})`;
+    g2.fillStyle=`rgba(178,102,255,${.05+ (uiStep===0?.05:0)})`;
     g2.fillRect(0,0,w,h);
   }
 }
 draw();
 
-// 波形の色。テーマを変えたときに拾い直す
-let scopeColorCache='';
-function scopeColor(){ return scopeColorCache || 'rgba(216,163,64,.7)'; }
 
 /* ---- 読み出し ---- */
 const rBPM=document.getElementById('rbpm'), rBar=document.getElementById('rbar');
