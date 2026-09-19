@@ -39,7 +39,7 @@ async function start(page, query = '') {
 test('jev のスライダーと monitor の表示がある', async ({ page }) => {
   await page.goto('/index.html');
   await expect(page.locator('#s_jev')).toBeVisible();
-  await expect(page.locator('#s_jev')).toHaveValue('0.8');
+  await expect(page.locator('#s_jev')).toHaveValue('1');
   await expect(page.locator('#pjev')).toBeVisible();
   // 雰囲気の操作ではないので (edit) を付けない。付くと陰陽が波に従わなくなる
   await page.locator('#s_jev').fill('0.5');

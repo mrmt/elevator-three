@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>About — Elevator Three</title>
 <style>
-  /* 本体 (index.html) の EK の見た目を踏襲する。漆黒の筐体に黄色のアクセント、細い罫線で囲んだモジュール */
+  /* 本体 (index.html) と同じ青紫とローズの配色、細い罫線で囲んだモジュール */
   :root{
-    /* 紫の5色 (D-13)。本体の index.html と揃える */
-    --bg:#3100a2;
-    --box:#2a008c;
-    --panel:rgba(76,0,153,.55);
-    --line:rgba(216,178,255,.26);
-    --ink:#d8b2ff;
-    --body:rgba(216,178,255,.9);
-    --dim:rgba(216,178,255,.6);
-    --accent:#b266ff;
-    --hot:#4500e2;
-    --glow:#d8b2ff;
+    /* 本体の index.html と配色を揃える */
+    --bg:#7474b0;
+    --box:#4e4e94;
+    --panel:rgba(207,207,232,.08);
+    --line:rgba(207,207,232,.65);
+    --ink:#ffffff;
+    --body:#ffffff;
+    --dim:#cfcfe8;
+    --accent:#db8d9b;
+    --hot:#313178;
+    --glow:#ffffff;
     --white:#ffffff;
     --disp:'Helvetica Neue','Arial Narrow','Hiragino Sans','Hiragino Kaku Gothic ProN',sans-serif;
     --data:'Menlo','Monaco',monospace;
@@ -85,7 +85,7 @@
     content:counter(s);position:absolute;left:0;top:.15rem;
     width:1.6rem;height:1.6rem;display:flex;align-items:center;justify-content:center;
     font-family:var(--data);font-size:.8rem;color:var(--white);background:var(--hot);
-    box-shadow:0 0 10px rgba(178,102,255,.5);
+    box-shadow:0 0 10px rgba(219,141,155,.5);
   }
   ol.steps li strong{font-size:1.02rem}
   .playglyph{
@@ -110,7 +110,7 @@
   /* monitor の表示例 */
   pre.mon{
     font-family:var(--data);font-size:.72rem;line-height:1.75;color:var(--dim);
-    border:1px solid var(--line);background:#1c005e;padding:.6rem .75rem;margin:.5rem 0 .3rem;overflow-x:auto;
+    border:1px solid var(--line);background:#313178;padding:.6rem .75rem;margin:.5rem 0 .3rem;overflow-x:auto;
   }
   pre.mon b{color:var(--ink);font-weight:400}
   pre.mon i{font-style:normal;color:var(--accent)}
@@ -118,10 +118,10 @@
   dl.mon dd{color:var(--body);margin-left:1rem}
 
   /* ステップ列の凡例。本体のキーと同じ色 */
-  .key{display:inline-block;width:.95rem;height:.95rem;vertical-align:-.15em;border-radius:2px;border:1px solid rgba(216,178,255,.18);margin-right:.2rem}
-  .key.now{background:var(--glow);border-color:var(--glow);box-shadow:0 0 6px rgba(216,178,255,.8)}
-  .key.on{background:var(--hot);border-color:rgba(178,102,255,.6)}
-  .key.hat{background:rgba(178,102,255,.28)}
+  .key{display:inline-block;width:.95rem;height:.95rem;vertical-align:-.15em;border-radius:2px;border:1px solid rgba(207,207,232,.18);margin-right:.2rem}
+  .key.now{background:var(--glow);border-color:var(--glow);box-shadow:0 0 6px rgba(207,207,232,.8)}
+  .key.on{background:var(--hot);border-color:rgba(219,141,155,.6)}
+  .key.hat{background:rgba(219,141,155,.28)}
   .key.off{background:var(--box)}
 
   footer{
@@ -306,17 +306,17 @@
         <tr><td class="k">evolution</td><td class="v">0–1 / 0.90</td><td>シーンの長さ (0 で約5分、1 で約2分) と、フレーズが8小節で早めに切り替わる確率</td></tr>
         <tr><td class="k">mutate</td><td class="v">0–1 / 0.80</td><td>リズムの並びが書き換わる確率。0 に近いほど同じ並びを繰り返す</td></tr>
         <tr class="grp"><td colspan="3">tonality</td></tr>
-        <tr><td class="k">shift</td><td class="v">0–1 / 0.5</td><td>形を保ったまま調を平行にずらす転調。3度の横滑りを主に、盛り上げでの全音上げ、ベースだけ前の音に留まるペダルも入る。0 なら五度圏の近い調へ移るだけ</td></tr>
-        <tr><td class="k">lush</td><td class="v">0–1 / 0.5</td><td>e.piano と strings の回路で、テンションの多い和音を開いた配置で置き、声部を滑らかに運ぶ。分数コードや内声の半音の動きも入る</td></tr>
+        <tr><td class="k">shift</td><td class="v">0–1 / 0.8</td><td>形を保ったまま調を平行にずらす転調。3度の横滑りを主に、盛り上げでの全音上げ、ベースだけ前の音に留まるペダルも入る。0 なら五度圏の近い調へ移るだけ</td></tr>
+        <tr><td class="k">lush</td><td class="v">0–1 / 0.8</td><td>e.piano と strings の回路で、テンションの多い和音を開いた配置で置き、声部を滑らかに運ぶ。分数コードや内声の半音の動きも入る</td></tr>
         <tr class="grp"><td colspan="3">decision</td></tr>
-        <tr><td class="k">jev</td><td class="v">0–1 / 0.8</td><td>次のシーン、フレーズ、仕掛け、dub、キー、リフの旋律といった判断のうち、Jev に任せる割合。0 にすると何も問い合わせず、Elevator Two と同じ判断で鳴る</td></tr>
+        <tr><td class="k">jev</td><td class="v">0–1 / 1.0</td><td>次のシーン、フレーズ、仕掛け、dub、キー、リフの旋律といった判断のうち、Jev に任せる割合。0 にすると何も問い合わせず、Elevator Two と同じ判断で鳴る</td></tr>
       </tbody>
     </table></div>
     <p class="note">character / motion / tonality のスライダーを触ると、シーン名に <code>(edit)</code> が付き、dark-bright は波に戻されなくなる。
       次のシーンに入ると (手で選んでも、自動で移っても) 元に戻る。<code>reset all</code> はすべてのスライダーを既定値に戻す (mixer の保存値と SOLO / MUTE も消す)。</p>
 
     <h3>mixer</h3>
-    <p>音源ごとの量を 0–200% で変える (100% が標準)。値はこのブラウザに保存され、次に開いたときも残る。</p>
+    <p>音源ごとの量を 0–200% で変える (既定は bass 2種が50%、その他100%)。値はこのブラウザに保存され、次に開いたときも残る。</p>
     <div class="tw"><table>
       <thead><tr><th>群</th><th>スライダー</th></tr></thead>
       <tbody>
@@ -547,17 +547,17 @@ key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal 
         <tr><td class="k">evolution</td><td class="v">0–1 / 0.90</td><td>Scene length (about 5 minutes at 0, about 2 at 1) and the chance of a phrase changing early at eight bars</td></tr>
         <tr><td class="k">mutate</td><td class="v">0–1 / 0.80</td><td>Chance that the rhythm gets rewritten. Near 0, patterns repeat</td></tr>
         <tr class="grp"><td colspan="3">tonality</td></tr>
-        <tr><td class="k">shift</td><td class="v">0–1 / 0.5</td><td>Parallel key shifts that keep the shape of everything — mostly sliding by thirds — plus whole-step lifts at the climax and a bass that lingers on the old root. At 0 the key only moves by fifths between scenes</td></tr>
-        <tr><td class="k">lush</td><td class="v">0–1 / 0.5</td><td>In the e.piano and strings circuits: tension-rich chords in open voicings with smooth voice leading, slash chords and inner voices moving by semitones</td></tr>
+        <tr><td class="k">shift</td><td class="v">0–1 / 0.8</td><td>Parallel key shifts that keep the shape of everything — mostly sliding by thirds — plus whole-step lifts at the climax and a bass that lingers on the old root. At 0 the key only moves by fifths between scenes</td></tr>
+        <tr><td class="k">lush</td><td class="v">0–1 / 0.8</td><td>In the e.piano and strings circuits: tension-rich chords in open voicings with smooth voice leading, slash chords and inner voices moving by semitones</td></tr>
         <tr class="grp"><td colspan="3">decision</td></tr>
-        <tr><td class="k">jev</td><td class="v">0–1 / 0.8</td><td>How much of the decision-making — next scene, phrase, events, dub, key, riff melody — is handed to Jev. At 0 nothing is asked and it decides exactly like Elevator Two</td></tr>
+        <tr><td class="k">jev</td><td class="v">0–1 / 1.0</td><td>How much of the decision-making — next scene, phrase, events, dub, key, riff melody — is handed to Jev. At 0 nothing is asked and it decides exactly like Elevator Two</td></tr>
       </tbody>
     </table></div>
     <p class="note">Touching a character, motion or tonality slider adds <code>(edit)</code> to the scene name, and dark-bright stops following the wave until the next scene begins, whether you pick it or it arrives on its own.
       <code>reset all</code> returns every slider to its default and also clears the saved mixer levels and any solo / mute.</p>
 
     <h3>mixer</h3>
-    <p>Set each sound from 0 to 200% (100% is normal). The levels are saved in this browser and come back next time.</p>
+    <p>Set each sound from 0 to 200% (defaults: both bass levels 50%, all others 100%). The levels are saved in this browser and come back next time.</p>
     <div class="tw"><table>
       <thead><tr><th>group</th><th>sliders</th></tr></thead>
       <tbody>

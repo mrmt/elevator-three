@@ -7,25 +7,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ELEVATOR THREE</title>
 <style>
-  /* 紫の5色 (D-13)。#d8b2ff / #b266ff / #4500e2 / #3100a2 / #4c0099。
-     two の EK (漆黒に黄色、two:D-37) の構造はそのままに、色だけを差し替えた */
+  /* 青紫の筐体。白い文字とローズの操作部で読みやすくする */
   :root{
-    --bg:#3100a2;                    /* 地 */
-    --box:#2a008c;                   /* section・header・footer の地。地より少し沈める */
-    --deep:#4c0099;                  /* ツールチップなど、浮いた箱の地 */
-    --panel:rgba(76,0,153,.55);      /* #4c0099 を地に重ねる */
-    --panel-hi:rgba(69,0,226,.35);
-    --line:rgba(216,178,255,.26);
-    --ink:#d8b2ff;                   /* 文字 */
-    --dim:rgba(216,178,255,.6);
-    --accent:#b266ff;                /* 見出しの帯、つまみ、選択中のもの */
-    --hot:#4500e2;                   /* 押している状態の地。文字は白 */
-    --glow:#d8b2ff;                  /* 点灯 (インジケーター、いま鳴っているステップ) */
+    --bg:#7474b0;                    /* 地 */
+    --box:#4e4e94;                   /* section・header・footer の地。地より濃くする */
+    --deep:#313178;                  /* ツールチップなど、浮いた箱の地 */
+    --panel:rgba(207,207,232,.08);      /* 淡い青紫を重ねて操作面を明るくする */
+    --panel-hi:rgba(207,207,232,.16);
+    --line:rgba(207,207,232,.65);
+    --ink:#ffffff;                   /* 文字 */
+    --dim:#cfcfe8;
+    --accent:#db8d9b;                /* 見出しの帯、つまみ、選択中のもの */
+    --hot:#313178;                   /* 押している状態の地。文字は白 */
+    --glow:#ffffff;                  /* 点灯 (インジケーター、いま鳴っているステップ) */
     --white:#ffffff;
-    --err:#ff9ec7;
-    --scope:#d8b2ff;                 /* 波形の線 */
-    --scope-bg:#1c005e;              /* 波形の地 */
-    --scope-grid:rgba(178,102,255,.10);
+    --err:#ffb8c5;
+    --scope:#cfcfe8;                 /* 波形の線 */
+    --scope-bg:#313178;              /* 波形の地 */
+    --scope-grid:rgba(161,161,206,.35);
     --disp:'Helvetica Neue','Arial Narrow',sans-serif;
     --data:'Menlo','Monaco',monospace;
   }
@@ -219,7 +218,7 @@
   .jevlog .e{display:flex;flex-direction:column;gap:.2rem;padding-bottom:.55rem;border-bottom:1px solid var(--line)}
   .jevlog .m{color:var(--dim);letter-spacing:.08em}
   .jevlog pre{margin:0;font:inherit;white-space:pre-wrap;overflow-wrap:anywhere}
-  .jevlog .q{color:#b7b0c4}                /* 送った query。グレー */
+  .jevlog .q{color:#cfcfe8}                /* 送った query。グレー */
   .jevlog .r{color:var(--white)}           /* 返った result。白 */
   .jevlog .o{                               /* 音楽的に何が起こるか。強調 */
     color:var(--glow);font-weight:700;background:var(--hot);
@@ -243,10 +242,10 @@
     position:relative;display:flex;align-items:center;justify-content:center;
     width:clamp(96px,24vmin,176px);height:clamp(96px,24vmin,176px);
     border-radius:50%;
-    background:rgba(42,0,140,.92);   /* 下のスライダーが透けて見えないよう濃くする */
+    background:var(--box);   /* 下のスライダーが透けて見えないよう濃くする */
     border:3px solid var(--accent);
     color:var(--accent);
-    box-shadow:0 0 0 0 rgba(178,102,255,.45);
+    box-shadow:0 0 0 0 rgba(219,141,155,.45);
     transition:background .18s,color .18s,transform .18s,box-shadow .6s;
     animation:bigpulse 2.6s ease-out infinite;
   }
@@ -256,15 +255,15 @@
     font-size:clamp(1rem,3.4vmin,1.7rem);letter-spacing:.32em;font-weight:700;white-space:nowrap;
     color:var(--accent);text-decoration:none;
     padding:.45em .5em .45em .82em;   /* 字間のぶん右が空くので、左を少し広く取って見た目の中央を揃える */
-    background:var(--box);border:1px solid rgba(178,102,255,.55);   /* 下の文字が透けないよう不透明にする */
+    background:var(--box);border:1px solid rgba(219,141,155,.55);   /* 下の文字が透けないよう不透明にする */
     transition:background .16s,color .16s;
   }
   #readme:hover,#readme:focus-visible{background:var(--hot);color:var(--white)}
   /* 気づいてもらうための呼吸。控えめに一度ずつ広がる */
   @keyframes bigpulse{
-    0%{box-shadow:0 0 0 0 rgba(178,102,255,.45)}
-    70%{box-shadow:0 0 0 18px rgba(178,102,255,0)}
-    100%{box-shadow:0 0 0 0 rgba(178,102,255,0)}
+    0%{box-shadow:0 0 0 0 rgba(219,141,155,.45)}
+    70%{box-shadow:0 0 0 18px rgba(219,141,155,0)}
+    100%{box-shadow:0 0 0 0 rgba(219,141,155,0)}
   }
   @media (prefers-reduced-motion:reduce){
     #bigplay{animation:none}
@@ -331,9 +330,9 @@
   .steps i{display:block;background:var(--line);height:22%;transition:background .1s,box-shadow .1s}
   .steps i.beat{height:44%}
   /* 何が鳴る位置かを高さと色で示す。on = キックやスネア、hat = ハット */
-  .steps i.hat{background:rgba(178,102,255,.45);height:34%}
+  .steps i.hat{background:rgba(219,141,155,.45);height:34%}
   .steps i.on{background:var(--hot);height:66%}
-  .steps i.now{background:var(--glow);box-shadow:0 0 7px rgba(216,178,255,.7)}
+  .steps i.now{background:var(--glow);box-shadow:0 0 7px rgba(207,207,232,.7)}
   .seqhead{display:flex;justify-content:space-between;align-items:baseline;margin-top:1.4rem}
 
   /* ---- 進行の表示 ----
@@ -420,13 +419,13 @@
   }
   .steps i{
     height:18px !important;border-radius:2px;
-    background:var(--box);border:1px solid rgba(216,178,255,.18);
+    background:var(--box);border:1px solid rgba(207,207,232,.18);
   }
-  .steps i.hat{background:rgba(178,102,255,.28)}
-  .steps i.on{background:var(--hot);border-color:rgba(178,102,255,.6)}
+  .steps i.hat{background:rgba(219,141,155,.28)}
+  .steps i.on{background:var(--hot);border-color:rgba(219,141,155,.6)}
   .steps i.now{
     background:var(--glow);border-color:var(--glow);
-    box-shadow:0 0 10px rgba(216,178,255,.8),inset 0 0 6px rgba(255,255,255,.5);
+    box-shadow:0 0 10px rgba(207,207,232,.8),inset 0 0 6px rgba(255,255,255,.5);
   }
   .lamp{border-radius:2px;width:9px;height:9px}
   .toggle[aria-pressed="true"] .lamp{box-shadow:0 0 9px var(--glow)}
@@ -435,6 +434,9 @@
   .scene{color:var(--accent)}
   #tip{background:var(--deep)}
 
+  /* 小さな文字は白く保ち、差し色は操作と状態の目印に使う */
+  .param .val,#jev .rd b,#monitor .rd b,.prog .ev{color:var(--ink)}
+  .tbtn[data-on="1"],.toggle[aria-pressed="true"]{border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -559,9 +561,9 @@ const P = {
   glitch:    {def:.90},
   evolution: {def:.90},
   mutate:    {def:.80},
-  shift:     {def:.5},    // 平行移動の転調の強さ (two:D-65)。0 で従来どおり。既定は two:D-70 で 0.5
-  lush:      {def:.5},    // 開いた和声の強さ (two:D-66)。0 で従来どおり。既定は two:D-70 で 0.5
-  jev:       {def:.8},    // 判断のうち Jev に任せる割合 (D-5)。0 なら two と同じ
+  shift:     {def:.8},    // 平行移動の転調の強さ (two:D-65)。0 で従来どおり。既定は 0.8
+  lush:      {def:.8},    // 開いた和声の強さ (two:D-66)。0 で従来どおり。既定は 0.8
+  jev:       {def:1},    // 判断のうち Jev に任せる割合 (D-5)。0 なら two と同じ
 };
 
 /* ============================================================
@@ -580,8 +582,8 @@ const MIX = {
   rim:      {label:'rim'},
   perc:     {label:'perc'},
   cowbell:  {label:'cowbell',    tip:'Electro kit only'},
-  bassFunk: {label:'funk bass',  tip:'Bass level in electro funk scenes'},
-  bass:     {label:'other bass', tip:'Bass level in every other scene'},
+  bassFunk: {def:.5, label:'funk bass',  tip:'Bass level in electro funk scenes'},
+  bass:     {def:.5, label:'other bass', tip:'Bass level in every other scene'},
   strings:  {label:'strings',    tip:'Sustained chords, arpeggio and high riff'},
   chop:     {label:'chord chop'},
   stab:     {label:'stab'},
@@ -607,7 +609,7 @@ const mix = {};
   try{ saved = JSON.parse(localStorage.getItem(MIX_STORE)||'{}') || {}; }catch(_){ /* 読めなければ既定値 */ }
   for(const k in MIX){
     const v=saved[k], min=MIX[k].min??0, max=MIX[k].max??2;
-    mix[k] = (typeof v==='number' && v>=min && v<=max) ? v : 1;
+    mix[k] = (typeof v==='number' && v>=min && v<=max) ? v : (MIX[k].def??1);
   }
 }
 function saveMix(){
@@ -3708,7 +3710,7 @@ function fmtJson(v,depth=0,ind=''){
   const pad=ind+'  ';
   const items = Array.isArray(v)
     ? v.map(x=>pad+fmtJson(x,depth+1,pad))
-    : Object.entries(v).map(([k,x])=>pad+JSON.stringify(k)+': '+fmtJson(x,depth+1,pad));
+    : Object.entries(v).filter(([k])=>k!=='history').map(([k,x])=>pad+JSON.stringify(k)+': '+fmtJson(x,depth+1,pad));
   if(!items.length) return Array.isArray(v) ? '[]' : '{}';
   const [o,c]=Array.isArray(v) ? ['[',']'] : ['{','}'];
   return o+'\n'+items.join(',\n')+'\n'+ind+c;
@@ -4428,13 +4430,13 @@ function updateLeds(){
 
 // 波形の色。テーマを変えたときに拾い直す
 let scopeColorCache='', scopeBgCache='';
-function scopeColor(){ return scopeColorCache || '#d8b2ff'; }
+function scopeColor(){ return scopeColorCache || '#cfcfe8'; }
 function draw(){
   requestAnimationFrame(draw);
   updateLeds();   // キャンバスが隠れている (狭い画面の別タブ) ときも回す
   const w=cv.clientWidth, h=cv.clientHeight;
   if(!w||!h) return;
-  g2.fillStyle=scopeBgCache||'#1c005e'; g2.fillRect(0,0,w,h);
+  g2.fillStyle=scopeBgCache||'#313178'; g2.fillRect(0,0,w,h);
 
   // 波形。いま出ている音をそのまま横に引き伸ばして描く。
   // 立ち上がりが左端に来るよう、上りのゼロ交差を探して起点にする
@@ -4459,7 +4461,7 @@ function draw(){
 
   // 拍の明滅。無音の段階でも拍が見えるようにしておく
   if(uiStep>=0 && uiStep%4===0){
-    g2.fillStyle=`rgba(178,102,255,${.05+ (uiStep===0?.05:0)})`;
+    g2.fillStyle=`rgba(219,141,155,${.05+ (uiStep===0?.05:0)})`;
     g2.fillRect(0,0,w,h);
   }
 }

@@ -92,9 +92,9 @@ test('見た目は EK 固定で、切り替えは無い', async ({ page }) => {
   // two:D-37。テーマの切り替えは廃止した (2026-09-12)
   await expect(page.locator('.themebtn')).toHaveCount(0);
   expect(await page.getAttribute('html', 'data-theme')).toBeNull();
-  // 紫の5色 (D-13)。地は #3100a2
+  // 青紫の背景
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  expect(bg).toBe('rgb(49, 0, 162)');
+  expect(bg).toBe('rgb(116, 116, 176)');
 });
 
 test('UI は英語だけで、言語の切り替えは無い', async ({ page }) => {
@@ -276,7 +276,7 @@ test('タイトルの左に、上の階層へのアイコンのリンクがあ�
   await expect(link).toHaveAttribute('target', '_blank');
   await expect(link.locator('svg path')).toHaveCount(3);
   await expect(link).toBeVisible();
-  expect(await link.evaluate(el => getComputedStyle(el).color)).toBe('rgb(216, 178, 255)');   // --ink (D-13)
+  expect(await link.evaluate(el => getComputedStyle(el).color)).toBe('rgb(255, 255, 255)');   // --ink
   // タイトルより左にある
   const icon = await link.boundingBox();
   const title = await page.locator('header .mark').boundingBox();
