@@ -6,7 +6,7 @@
   "description": "generative electro",
   "scripts": {
     "test": "playwright test",
-    "test:worker": "node --test worker/test",
+    "test:worker": "node --test worker/test/*.test.js",
     "test:ui": "playwright test --ui"
   },
   "devDependencies": {
