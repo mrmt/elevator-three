@@ -564,6 +564,7 @@ const P = {
   shift:     {def:.8},    // 平行移動の転調の強さ (two:D-65)。0 で従来どおり。既定は 0.8
   lush:      {def:.8},    // 開いた和声の強さ (two:D-66)。0 で従来どおり。既定は 0.8
   jev:       {def:1},    // 判断のうち Jev に任せる割合 (D-5)。0 なら two と同じ
+  temp:      {def:1, max:2},   // Jev の確率の温度 (D-18)。1 でそのまま、下げるほど尖り、上げるほど平らになる
 };
 
 /* ============================================================
@@ -3834,8 +3835,27 @@ let jevHold={};
 const JEV_HOLD_BARS={phrase:4, shift:8};
 const jevHeld=k=>{ const h=jevHold[k]; return h && barCount<h.until ? h.ans : null; };
 
-function sampleProbs(probs,allowed){
-  const ks=Object.keys(probs).filter(k=>probs[k]>0 && allowed(k));
+/* 温度 (D-18)。API に温度の指定は無いので、返った確率に手元で掛ける。
+   choice は p^(1/T) を正規化し、noul は対数オッズを T で割る。T=0 はいちばん確率の高いものを取る */
+const JEV_TEMP_MIN=.02;
+const jevTemp=()=>target.temp;   // 音の変化ではないので滑らかに寄せず、目標値をすぐ使う
+function tempProbs(probs,ks,T=jevTemp()){
+  const out={};
+  if(T<JEV_TEMP_MIN){
+    const top=Math.max(...ks.map(k=>probs[k]));
+    for(const k of ks) out[k]=probs[k]===top ? 1 : 0;
+  }else for(const k of ks) out[k]=Math.pow(probs[k],1/T);
+  return out;
+}
+function tempP(p,T=jevTemp()){
+  if(T<JEV_TEMP_MIN) return p>.5 ? 1 : p<.5 ? 0 : .5;
+  const q=clamp(p,1e-6,1-1e-6), z=Math.log(q/(1-q))/T;
+  return 1/(1+Math.exp(-z));
+}
+function sampleProbs(raw,allowed){
+  const ks0=Object.keys(raw).filter(k=>raw[k]>0 && allowed(k));
+  const probs=tempProbs(raw,ks0);
+  const ks=ks0.filter(k=>probs[k]>0);
   let sum=0; for(const k of ks) sum+=probs[k];
   if(sum<=0) return null;
   let r=Math.random()*sum;
@@ -3864,7 +3884,7 @@ function jevChoice(ans,qid,allowed=()=>true,{always=false}={}){
 function jevRoll(ans,qid,localP,gate=1,map=p=>p){
   const a=ans && ans[qid], has = !!a && typeof a.p==='number';
   const byJev = has && Math.random()<jevInfl();
-  const p = byJev ? map(clamp(a.p*gate)) : localP;
+  const p = byJev ? map(clamp(tempP(a.p)*gate)) : localP;
   if(byJev){ jev.used++; jev.last=`${qid} ${pct(p)}`; } else jev.local++;
   if(has && !byJev) jevOutcome(ans,`${qid}: decided by local rules`);
   jev.roll = byJev ? {ans, p} : null;
@@ -4265,9 +4285,10 @@ const PARAM_UI={
   shift:    {label:'shift',       tip:'Parallel key shifts, step-ups at the climax and pedal bass. 0 keeps the moves by fifths.'},
   lush:     {label:'lush',        tip:'Open, tension-rich voicings with smooth voice leading in the e.piano and strings circuits.'},
   jev:      {label:'jev',         tip:'How much of the musical decision-making is handed to Jev. 0 plays exactly like Elevator Two.'},
+  temp:     {label:'temperature', tip:"Temperature applied to Jev's probabilities. 1 uses them as they are; lower follows Jev's favourite more strictly (0 always takes it), higher makes its choices more random."},
 };
 function paramSlider(host,key){
-  inputs[key]=addSlider(host,{id:key, ...PARAM_UI[key], min:0, max:1, step:.005, value:target[key],
+  inputs[key]=addSlider(host,{id:key, ...PARAM_UI[key], min:P[key].min??0, max:P[key].max??1, step:.005, value:target[key],
     // 陰陽は既定値ではなく、いまのシーンの位置へ戻す
     def: key==='yy' ? ()=>SCENES[sceneIdx].yy : P[key].def,
     fmt:v=>v.toFixed(2),
@@ -4275,8 +4296,8 @@ function paramSlider(host,key){
       target[key]=v;
       // 手で陰陽を動かしたら、波の位置もそこへ移す。放したあとは続きから進む (two:D-13)
       if(key==='yy') wavePos=yyToWavePos(v);
-      /* jev は判断の任せ方で、雰囲気の操作ではない。(edit) を付けると陰陽が波に従わなくなるので付けない */
-      if(key!=='jev') markEdited();
+      /* jev と temp は判断の任せ方で、雰囲気の操作ではない。(edit) を付けると陰陽が波に従わなくなるので付けない */
+      if(key!=='jev' && key!=='temp') markEdited();
     }});
 }
 // SOLO / MUTE を持つ行 (two:D-59)。key → .param
@@ -4340,7 +4361,7 @@ const controlBody=mixGroup('control',ctlRowEl);
 for(const [title,keys] of [['character',['yy','density','weight','drive','space']],
                            ['motion',['glitch','evolution','mutate']],
                            ['tonality',['shift','lush']],
-                           ['decision',['jev']]]){
+                           ['decision',['jev','temp']]]){
   const g=mixSub(controlBody,title);
   for(const k of keys) paramSlider(g,k);
 }

@@ -46,6 +46,36 @@ test('jev のスライダーと monitor の表示がある', async ({ page }) =>
   await expect(page.locator('#scenename')).not.toContainText('(edit)');
 });
 
+test('temperature のスライダーがあり、動かしても (edit) を付けない (D-18)', async ({ page }) => {
+  await page.goto('/index.html');
+  const s = page.locator('#s_temp');
+  await expect(s).toBeVisible();
+  await expect(s).toHaveValue('1');
+  await expect(s).toHaveAttribute('max', '2');
+  // 判断の任せ方なので (edit) を付けない
+  await s.fill('0.5');
+  await expect(page.locator('#scenename')).not.toContainText('(edit)');
+});
+
+test('temperature 0 では Jev のいちばん確率の高い答えだけを取る (D-18)', async ({ page }) => {
+  test.setTimeout(60000);
+  await fakeWorker(page, ({ kind, ask }) => {
+    if (kind !== 'phrase') return {};
+    const probs = Object.fromEntries(Object.keys(ask.event).map(k => [k, 0]));
+    probs.kickdrop = .6; probs.sweep = .4;
+    return { event: { probs, confidence: .2 }, ...(ask.dub ? { dub: { p: .45, confidence: null } } : {}) };
+  });
+  await start(page);
+  await page.locator('#s_temp').fill('0');
+  const out = t => page.locator('#jevlog .o', { hasText: t });
+  await expect(out('event: kick out').first()).toBeVisible({ timeout: 40000 });
+  await expect.poll(() => out('event: kick out').count(), { timeout: 40000 }).toBeGreaterThanOrEqual(3);
+  await expect(out('event: filter sweep')).toHaveCount(0);
+  // 真偽の問いも 0.5 未満なら起こさない
+  await expect(out('no dub (p=0%)').first()).toBeVisible({ timeout: 40000 });
+  await expect(out(/^dub at bar/)).toHaveCount(0);
+});
+
 test('イベントは Jev の答えどおりに起きる', async ({ page }) => {
   test.setTimeout(60000);
   const seen = await fakeWorker(page, ({ kind, ask }) =>
