@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "generative electro",
+  "description": "agentic electro music",
   "scripts": {
     "test": "playwright test",
     "test:worker": "node --test worker/test/*.test.js",
