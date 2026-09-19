@@ -51,6 +51,8 @@ Worker の試験は `npm run test:worker`。
 - 配色を青紫の地、白い文字、淡いクリームの差し色にした。about と docs の解説 html も同じ (D-16)
 - 既定値を上げた。`shift` / `lush` を 0.8、`jev` を 1、mixer の `funk bass` / `other bass` を 0.5 (D-16)
 - jev 欄の JSON から `history` を外した。送る state には含む (D-16)
+- 右カラムの jev 欄の下に decision 欄を足し、Jev の答えで音楽的に何が起こるかをそこへ移した。高さは3行で、新しい順に1件1行。
+  jev 欄のやり取りが長くなり、スクロールしないと見えなくなったため (D-19)
 - decision 群に `temperature` (0〜2、既定 1) を足した。Jev の確率に掛ける温度で、下げるほど Jev のいちばんの答えに寄り、0 では必ずそれを取る。上げるほど均す (D-18)
 
 **音**

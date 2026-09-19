@@ -209,7 +209,8 @@
     <h3>monitor 欄 (右)</h3>
     <ul>
       <li><b>monitor</b> — BPM、小節、出力の波形、16ステップ、いま何が起きているかの表示</li>
-      <li><b>jev</b> — Jev とのやり取り。何を問い、何が返り、その結果音楽的に何が起こるか</li>
+      <li><b>jev</b> — Jev とのやり取り。何を問い、何が返ったか</li>
+      <li><b>decision</b> — Jev の答えで、音楽的に何が起こるか</li>
     </ul>
     <p>画面が狭いときは、上部の <code>scene</code> / <code>param</code> / <code>monitor</code> タブで切り替える。</p>
   </section>
@@ -372,14 +373,14 @@ key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal 
   <section class="box">
     <h2>jev の読み方</h2>
     <p>見出しの右に、Jev との繋がり (<code>on</code> / <code>offline</code> / <code>off</code>) と応答時間、Jev と手元の規則で決めた数が出る。
-      その下に、Jev とのやり取りが1回ずつ、新しいものから並ぶ。1件は4つの部分からなる。</p>
+      その下に、Jev とのやり取りが1回ずつ、新しいものから並ぶ。1件は3つの部分からなる。</p>
     <ul>
       <li>小さな行 — 問い合わせた小節、何の判断か、どの小節で使う答えか</li>
       <li><b>グレー</b> — Jev に送った問い (JSON)。いまの曲の状態、ここ数分の出来事、選択肢</li>
       <li><b>白</b> — Jev から返った答え (JSON)。選択肢ごとの確率</li>
-      <li><b>強調</b> — その答えから、音楽的に何が起こるか。たとえば <code>event: filter sweep at bar 20</code>、<code>next scene: gear (electro funk)</code>、<code>key shifts to C# dorian</code></li>
     </ul>
-    <p>答えが間に合わなかったときや、<code>jev</code> の割合で手元の規則に回したときは、そのことが強調の行に出る。</p>
+    <p>答えが間に合わなかったときや、<code>jev</code> の割合で手元の規則に回したときは、そのことが件の最後に強調の行で出る。</p>
+    <p>その答えから音楽的に何が起こるかは、下の <b>decision</b> 欄に、新しいものから1行ずつ出る。たとえば <code>event: filter sweep at bar 20</code>、<code>next scene: gear (electro funk)</code>、<code>key shifts to C# dorian</code>。いちばん上が最新で、マウスを乗せると全文が出る。</p>
   </section>
 
   <section class="box">
@@ -451,7 +452,8 @@ key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal 
     <h3>monitor (right)</h3>
     <ul>
       <li><b>monitor</b> — BPM, bar, the output waveform, the 16 steps and a readout of what is happening</li>
-      <li><b>jev</b> — the exchanges with Jev: what was asked, what came back, and what it does to the music</li>
+      <li><b>jev</b> — the exchanges with Jev: what was asked and what came back</li>
+      <li><b>decision</b> — what Jev's answers do to the music</li>
     </ul>
     <p>On narrow screens, switch between them with the <code>scene</code> / <code>param</code> / <code>monitor</code> tabs at the top.</p>
   </section>
@@ -614,14 +616,14 @@ key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal 
   <section class="box">
     <h2>Reading jev</h2>
     <p>Next to the heading: the link to Jev (<code>on</code> / <code>offline</code> / <code>off</code>), the response time, and how many decisions Jev and the local rules have made.
-      Below it, each exchange with Jev, newest first, in four parts:</p>
+      Below it, each exchange with Jev, newest first, in three parts:</p>
     <ul>
       <li>A small line — the bar it was asked in, which decision, and the bar the answer is for</li>
       <li><b>Grey</b> — what was sent to Jev (JSON): the current state of the music, what happened in the last few minutes, and the choices</li>
       <li><b>White</b> — what Jev sent back (JSON): a probability for each choice</li>
-      <li><b>Highlighted</b> — what that answer does to the music, such as <code>event: filter sweep at bar 20</code>, <code>next scene: gear (electro funk)</code> or <code>key shifts to C# dorian</code></li>
     </ul>
-    <p>If the answer came too late, or the <code>jev</code> slider left the decision to the local rules, the highlighted line says so.</p>
+    <p>If the answer came too late, or the <code>jev</code> slider left the decision to the local rules, a highlighted line at the end of the exchange says so.</p>
+    <p>What the answers do to the music appears one line each in the <b>decision</b> box below, newest first — such as <code>event: filter sweep at bar 20</code>, <code>next scene: gear (electro funk)</code> or <code>key shifts to C# dorian</code>. Hover a line to see all of it.</p>
   </section>
 
   <section class="box">

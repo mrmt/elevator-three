@@ -386,15 +386,17 @@ EK の構造 (two:D-37) のまま、青紫の地に白い文字、淡いクリ�
 **monitor (two:D-61)** — 右カラムの上。`#rbpm` / `#rbar` (見出しの右)、波形の帯 `#cv`、ステップ列 `#steps`、
 進行の表示 (`#pphrase` ほか) を持つ HTML の箱。
 
-**JEV (D-15)** — 右カラムの下。残りの高さを取り、ログ `#jevlog` はその中だけでスクロールする。
+**JEV (D-15)** — 右カラムの中段。残りの高さを取り、ログ `#jevlog` はその中だけでスクロールする。
 見出しの右に `#pjev` (状態と応答時間) と `#pjevd` (Jev と手元で決めた数)。
+
+**DECISION (D-19)** — 右カラムの下。高さは3行に固定し、Jev の答えで音楽的に何が起こるかを `#declog` に新しい順で1件1行に出す。
 
 **next と loop bar (two:D-62)** — HTML ではシーン欄に置いてあり、本体が control の master 列の下 (小見出し `scene`) へ移す。
 点滅は `showProgress()` がまとめて付け外しする。シーン名は乗り換え前の小節の間、next は押してから乗り換わるまで (`nextPending`)、loop bar は有効な間 (two:D-63)。
 点滅は視差効果を減らす設定でも止めない。
 `#pbarpos` の末尾には、いまの小節の装飾 (`dub` / `fill`) が出る。
 
-群は control (master / character / motion / tonality / decision)・mixer (drums / bass / harmony / riff / texture) の2つと、右カラムの monitor / jev (two:D-57 / two:D-61 / D-14)。
+群は control (master / character / motion / tonality / decision)・mixer (drums / bass / harmony / riff / texture) の2つと、右カラムの monitor / jev / decision (two:D-57 / two:D-61 / D-14 / D-19)。
 decision 群の `jev` は判断を Jev に任せる割合 (D-5)、`temperature` は Jev の確率に掛ける温度 (0〜2、D-18)。雰囲気の操作ではないので、動かしてもシーン名に (edit) を付けない (D-10)。
 `mixGroup()` が群を、`mixSub()` が群の中の小見出し付きの列を作る。
 `reset all` は、`addSlider()` が登録簿 `sliders` に積んだ既定値へ全部戻し、保存した個別の音量を消す。
@@ -447,6 +449,8 @@ onBar(bar) ─ jevTake(name, tag) → jevChoice / jevRoll → 手元の判断 (t
 - 問い合わせるかどうか (`jevActive`) は目標値 `target.jev` で決める。滑らかに寄せる `current.jev` は 0 にならないので、それで決めるとスライダーを 0 にしても問い合わせが続く (D-12)
 - JEV セクション (D-15): `jevAsk()` が1回ごとに `jevEntry()` で件を作り、送った `req` と返った `res` を持たせる。
   `jevChoice()` は `describeChoice()` で、真偽の問いは呼び手が `jevRolled()` で、音楽的に何が起こるかを `jevOutcome()` に書き足す。
+  Jev が決めたことは `decisions` に積み、`renderDecisions()` が DECISION の `#declog` に新しい順で40件まで描く。
+  手元の規則に回したこと (`jevOutcome(…, false)`) は件の `out` に積み、JEV に出す (D-19)
   答えのオブジェクトから件を引くのに `WeakMap` (`ansEntry`) を使う。`renderJevLog()` が `#jevlog` に新しい順で20件まで描く。
   JSON は `fmtJson()` で整形し、整形した文字列は件に取っておく。`history` キーは表示から外す (送る state には含む、D-16)
 

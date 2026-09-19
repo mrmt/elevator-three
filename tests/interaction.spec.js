@@ -147,13 +147,13 @@ test('大きな再生ボタンと READ ME FIRST が画面の中央に出る', as
   expect(b.width).toBeGreaterThan(90);
 });
 
-test('卓は control / mixer、右カラムは monitor / jev', async ({ page, isMobile }) => {
-  // two:D-57 / two:D-61 / D-14
+test('卓は control / mixer、右カラムは monitor / jev / decision', async ({ page, isMobile }) => {
+  // two:D-57 / two:D-61 / D-14 / D-19
   if (isMobile) await page.locator('.tab[data-tab="param"]').click();
   await expect(page.locator('#mixer .mixgrp > .mixhead > span:first-child'))
     .toHaveText(['control', 'mixer']);
   await expect(page.locator('#tab-mon .mixgrp > .mixhead > span:first-child'))
-    .toHaveText(['monitor', 'jev']);
+    .toHaveText(['monitor', 'jev', 'decision']);
   await expect(page.locator('#s_mix_strings')).toHaveCount(1);
   await expect(page.locator('#s_mix_sustain')).toHaveCount(0);
 });
