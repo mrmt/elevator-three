@@ -1,8 +1,9 @@
 name: CI
 
-# ブランチを問わず push で起動する
+# main への push と PR で起動する。push をブランチを問わず拾うと、PR のブランチで2本走る
 on:
   push:
+    branches: [main]
   pull_request:
 
 jobs:
@@ -25,8 +26,12 @@ jobs:
       - name: Run tests
         run: npm test
 
+      # 中継の Worker (D-3) の検証関数。依存パッケージは無い
+      - name: Run worker tests
+        run: npm run test:worker
+
       - if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: playwright-report/

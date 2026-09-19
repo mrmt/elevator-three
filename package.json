@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "generative electro",
+  "description": "agentic electro music player",
   "scripts": {
     "test": "playwright test",
+    "test:worker": "node --test worker/test/*.test.js",
     "test:ui": "playwright test --ui"
   },
   "devDependencies": {

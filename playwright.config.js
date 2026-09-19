@@ -53,6 +53,15 @@ export default defineConfig({
         launchOptions: { args: ['--autoplay-policy=no-user-gesture-required'] },
       },
     },
+    // Jev の判断の差し込み (D-4〜D-8)。中継の Worker の応答は page.route で差し替える
+    {
+      name: 'jev-chromium',
+      testMatch: /jev\.spec\.js/,
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: { args: ['--autoplay-policy=no-user-gesture-required'] },
+      },
+    },
     // macOS相当。2カラムのデスクトップレイアウト
     {
       name: 'desktop-chromium',
