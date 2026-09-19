@@ -7,6 +7,8 @@
     { "pattern": "three-api.elevator-noise.com", "custom_domain": true }
   ],
   // IP ごとに毎分60回まで。楽器1つの問い合わせは毎分10回ほど
+  // リクエストのログ (Workers Logs) は取らない。プライバシーポリシーで「中継はログを残さない」と書いているため
+  "observability": { "enabled": false },
   "ratelimits": [
     { "name": "LIMITER", "namespace_id": "3001", "simple": { "limit": 60, "period": 60 } }
   ]
