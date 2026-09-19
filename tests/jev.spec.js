@@ -67,7 +67,7 @@ test('temperature 0 では Jev のいちばん確率の高い答えだけを取�
   });
   await start(page);
   await page.locator('#s_temp').fill('0');
-  const out = t => page.locator('#jevlog .o', { hasText: t });
+  const out = t => page.locator('#declog .d', { hasText: t });
   await expect(out('event: kick out').first()).toBeVisible({ timeout: 40000 });
   await expect.poll(() => out('event: kick out').count(), { timeout: 40000 }).toBeGreaterThanOrEqual(3);
   await expect(out('event: filter sweep')).toHaveCount(0);
@@ -85,26 +85,29 @@ test('イベントは Jev の答えどおりに起きる', async ({ page }) => {
   await expect(page.locator('#pevent')).toContainText('kick out', { timeout: 30000 });
   await expect(page.locator('#pjev')).toContainText('on');
   await expect(page.locator('#pjevd')).toContainText('event kickdrop 100%');
-  // JEV セクション (D-15)。送った query (グレー)、返った result (白)、音楽的に何が起こるか (強調)
-  const entry = page.locator('#jevlog .e').filter({ has: page.locator('.o', { hasText: 'event: kick out' }) }).first();
+  // JEV セクション (D-15)。送った query (グレー) と返った result (白)
+  const entry = page.locator('#jevlog .e').filter({ has: page.locator('pre.r', { hasText: '"kickdrop":1' }) }).first();
   await expect(entry).toBeVisible();
   await expect(entry.locator('.m').first()).toContainText(/bar \d+ · phrase · for bar \d+/);
   await expect(entry.locator('pre.q')).toContainText('"kind": "phrase"');
   await expect(entry.locator('pre.q')).toContainText('"state"');
   await expect(entry.locator('pre.q')).toContainText('"ask"');
   await expect(entry.locator('pre.r')).toContainText('"answers"');
-  await expect(entry.locator('pre.r')).toContainText('"kickdrop":1');
-  // 読み分けられる。query はグレー、result は白、何が起こるかは太字と帯で強調 (D-16)
-  const look = await entry.evaluate(e => ['pre.q', 'pre.r', '.o'].map(s => {
-    const c = getComputedStyle(e.querySelector(s));
-    return { color: c.color, bg: c.backgroundColor, weight: c.fontWeight };
-  }));
-  const [q, r, o] = look;
-  expect(r.color).toBe('rgb(255, 255, 255)');
-  expect(q.color).not.toBe(r.color);
-  expect(o.bg).toBe('rgb(49, 49, 120)');   // --hot の帯
-  expect(o.bg).not.toBe(r.bg);
-  expect(Number(o.weight)).toBeGreaterThanOrEqual(700);
+  // 音楽的に何が起こるかは JEV の件ではなく、下の DECISION に出す (D-19)
+  await expect(entry.locator('.o', { hasText: 'event: kick out' })).toHaveCount(0);
+  const dec = page.locator('#declog .d', { hasText: 'event: kick out' }).first();
+  await expect(dec).toBeVisible();
+  await expect(dec).toHaveAttribute('title', /^bar \d+ · phrase · event: kick out/);
+  // 読み分けられる。query はグレー、result は白 (D-16)。DECISION のいちばん新しい件は太字と帯で強調する
+  const [q, r] = await entry.evaluate(e => ['pre.q', 'pre.r'].map(s => getComputedStyle(e.querySelector(s)).color));
+  expect(r).toBe('rgb(255, 255, 255)');
+  expect(q).not.toBe(r);
+  const top = await page.locator('#declog .d').first().evaluate(e => {
+    const c = getComputedStyle(e);
+    return { bg: c.backgroundColor, weight: c.fontWeight };
+  });
+  expect(top.bg).toBe('rgb(49, 49, 120)');   // --hot の帯
+  expect(Number(top.weight)).toBeGreaterThanOrEqual(700);
   const req = seen.find(b => b.kind === 'phrase');
   // 質問文は送らない。選択肢と state だけ
   expect(Object.keys(req.ask.event)).toContain('none');
@@ -181,8 +184,8 @@ test('行き先のシーンの音色は Jev の答えどおりになる (D-17)',
   expect(req.ask.tight).toBe(true);
   expect(req.ask.noise).toBe(true);
   await expect(page.locator('#pchord')).toContainText('noise');
-  await expect(page.locator('#jevlog .o', { hasText: 'bass: tight (p=100%)' }).first()).toBeVisible();
-  await expect(page.locator('#jevlog .o', { hasText: 'industrial noise on (p=100%)' }).first()).toBeVisible();
+  await expect(page.locator('#declog .d', { hasText: 'bass: tight (p=100%)' }).first()).toBeVisible();
+  await expect(page.locator('#declog .d', { hasText: 'industrial noise on (p=100%)' }).first()).toBeVisible();
 });
 
 test('リードの音色・キックの変形・並びの変異は Jev の答えどおりになる (D-17)', async ({ page }) => {
@@ -193,14 +196,14 @@ test('リードの音色・キックの変形・並びの変異は Jev の答え
     ...(ask.kick ? { kick: only(ask.kick, 'push') } : {}),
   });
   await start(page);
-  const out = t => page.locator('#jevlog .o', { hasText: t }).first();
+  const out = t => page.locator('#declog .d', { hasText: t }).first();
   await expect(out('lead timbre: square')).toBeVisible({ timeout: 40000 });
   await expect(out(/pattern mutates at bar \d+/)).toBeVisible({ timeout: 40000 });
   await expect(out('kick bends (push)')).toBeVisible({ timeout: 40000 });
   // キックの変形は8小節の終わりに使うので、その3小節前の節目の回だけ聞く
   for (const b of seen.filter(b => b.kind === 'phrase' && b.ask.kick)) expect((b.state.bar + 2) % 8).toBe(4);
   // Jev が square 以外を選ぶことはない
-  await expect(page.locator('#jevlog .o', { hasText: /lead timbre: (sawtooth|triangle|pulse)/ })).toHaveCount(0);
+  await expect(page.locator('#declog .d', { hasText: /lead timbre: (sawtooth|triangle|pulse)/ })).toHaveCount(0);
 });
 
 test('平行移動の幅とペダルは Jev の答えどおりになる (D-17)', async ({ page }) => {
@@ -209,7 +212,7 @@ test('平行移動の幅とペダルは Jev の答えどおりになる (D-17)',
     ? { shift: { p: 1, confidence: 0.9 }, step: only(ask.step, '+5'), pedal: { p: 1, confidence: 0.9 } } : {});
   await start(page);
   await page.locator('#s_shift').fill('1');
-  const out = t => page.locator('#jevlog .o', { hasText: t }).first();
+  const out = t => page.locator('#declog .d', { hasText: t }).first();
   await expect(out('key shifts up a fourth')).toBeVisible({ timeout: 60000 });
   await expect(out(/bass holds a pedal at bar \d+/)).toBeVisible({ timeout: 60000 });
   const req = seen.find(b => b.kind === 'harmony' && b.ask.shift);
@@ -281,6 +284,7 @@ test('Jev とのやり取りが増えても、mixer と JEV の位置と大き�
   const box = async () => ({
     mixer: await page.locator('#grp-mixer').boundingBox(),
     jev: await page.locator('#jev').boundingBox(),
+    decision: await page.locator('#decision').boundingBox(),
     scroll: await page.evaluate(() => [document.documentElement.scrollHeight, innerHeight]),
   });
   await expect.poll(() => seen.length, { timeout: 15000 }).toBeGreaterThan(1);
@@ -294,7 +298,38 @@ test('Jev とのやり取りが増えても、mixer と JEV の位置と大き�
   const b1 = await box();
   expect(b1.mixer).toEqual(b0.mixer);
   expect(b1.jev).toEqual(b0.jev);
+  expect(b1.decision).toEqual(b0.decision);
   expect(b1.scroll[0]).toBeLessThanOrEqual(b1.scroll[1]);
   const overflow = await page.locator('#jevlog').evaluate(e => e.scrollHeight > e.clientHeight);
   expect(overflow).toBe(true);
+});
+
+test('DECISION は JEV の下にあり、3行の高さでスクロールせずに見える (D-19)', async ({ page }) => {
+  test.setTimeout(90000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await fakeWorker(page, ({ kind, ask }) => kind !== 'phrase' ? {} : {
+    event: only(ask.event, 'sweep'), lead: only(ask.lead, 'square'),
+  });
+  await start(page);
+  const d = page.locator('#declog .d');
+  await expect.poll(() => d.count(), { timeout: 60000 }).toBeGreaterThan(4);
+  const g = await page.evaluate(() => {
+    const box = id => document.getElementById(id).getBoundingClientRect();
+    const log = document.getElementById('declog');
+    const lh = parseFloat(getComputedStyle(log).lineHeight);
+    const rows = [...log.children].map(e => e.getBoundingClientRect().height);
+    return { jev: box('jev'), dec: box('decision'), log: box('declog'), lh, rows,
+             scroll: log.scrollHeight > log.clientHeight, vh: innerHeight };
+  });
+  // JEV の真下にあり、画面の中に収まる
+  expect(g.dec.top).toBeGreaterThanOrEqual(g.jev.bottom - 1);
+  expect(g.dec.bottom).toBeLessThanOrEqual(g.vh);
+  // 高さは3行ぶん。1件は1行に切る。あふれたぶんは中でスクロールする
+  expect(g.log.height).toBeCloseTo(g.lh * 3, 0);
+  for (const h of g.rows) expect(h).toBeCloseTo(g.lh, 0);
+  expect(g.scroll).toBe(true);
+  // 新しい順。いちばん上が最新
+  await expect(d.first()).toHaveAttribute('title', /^bar \d+/);
+  const bars = await d.evaluateAll(es => es.map(e => parseInt(e.title.slice(4), 10)));
+  expect(bars).toEqual([...bars].sort((a, b) => b - a));
 });

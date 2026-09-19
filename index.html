@@ -226,6 +226,17 @@
   }
   .jevlog .x{color:var(--err)}
   .jevlog .off{color:var(--dim)}
+  /* DECISION (D-19)。Jev の答えで音楽的に何が起こるか。JEV の件が長くなっても、スクロールせずに見えるよう JEV の下に分ける。
+     高さは3行に固定し、1件を1行に切る (全文は title)。いちばん新しい件だけを強調する */
+  #decision{flex:none;padding-bottom:.4rem}
+  #decision .mixhead{flex:none}
+  .declog{
+    height:calc(3 * 1.5em);overflow-y:auto;overflow-x:hidden;
+    font-family:var(--data);font-size:.6rem;line-height:1.5;letter-spacing:.01em;color:var(--ink);
+    scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+  }
+  .declog .d{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:.45rem;border-left:3px solid transparent}
+  .declog .d:first-child{color:var(--glow);font-weight:700;background:var(--hot);border-left-color:var(--accent)}
 
   /* ---- 大きな再生ボタンと READ ME FIRST (Issue #1 / two:D-72) ----
      右上の小さなボタンだけでは、まず押さないと鳴らないことに気づけない。
@@ -495,7 +506,7 @@
     </div>
   </section>
 
-  <!-- 右カラム (D-14)。monitor と JEV。JEV のログが増えても、伸びるのはこのカラムの中だけ -->
+  <!-- 右カラム (D-14)。monitor と JEV と DECISION (D-19)。JEV のログが増えても、伸びるのはこのカラムの中だけ -->
   <section id="tab-mon">
     <div class="eyebrow">monitor</div>
     <!-- monitor (two:D-61)。BPM と小節、波形、ステップ列、進行の表示を集める -->
@@ -510,10 +521,15 @@
         <div><span>key</span> <b id="pkey">—</b> <span id="pchord"></span></div>
       </div>
     </div>
-    <!-- JEV (D-15)。Jev とのやり取りだけを出す。送った query (グレー)、返った result (白)、音楽的に何が起こるか (強調) -->
+    <!-- JEV (D-15)。Jev とのやり取りだけを出す。送った query (グレー)、返った result (白)、手元に回したこと (強調) -->
     <div class="mixgrp" id="jev">
       <div class="mixhead"><span>jev</span><span class="rd"><b id="pjev">—</b><span id="pjevd"></span></span></div>
       <div class="jevlog" id="jevlog"></div>
+    </div>
+    <!-- DECISION (D-19)。Jev の答えで音楽的に何が起こるか。新しい順に1件1行、高さは3行 -->
+    <div class="mixgrp" id="decision">
+      <div class="mixhead"><span>decision</span></div>
+      <div class="declog" id="declog"></div>
     </div>
   </section>
 </main>
@@ -3713,7 +3729,8 @@ function jevState(extra){
 
 /* ---- JEV セクション (D-15、D-11 を置き換えた) ----
    問い合わせ1回を1件とし、実際に送った query の JSON (グレー)、返った result の JSON (白)、
-   その結果音楽的に何が起こるか (強調) を、右カラムの JEV に新しい順で出す。
+   手元の規則に回したことや捨てたこと (強調) を、右カラムの JEV に新しい順で出す。
+   Jev の答えで音楽的に何が起こるかは、その下の DECISION に出す (D-19)。
    答えの answers から件を引けるようにしておき、jevChoice / jevRoll が何が起こるかを書き足す */
 const JEV_LOG_MAX=20;
 const jevEntries=[], ansEntry=new WeakMap();
@@ -3756,11 +3773,22 @@ function jevEntry(name,deadline,req){
   return e;
 }
 // 音楽的に何が起こるかを書き足す
-function jevOutcome(ans,text){
+/* Jev が決めたことは DECISION に出し (D-19)、手元の規則に回したことは JEV の件に残す */
+const DECISION_MAX=40;
+const decisions=[];
+function renderDecisions(){
+  const el=document.getElementById('declog');
+  if(!el) return;
+  el.replaceChildren(...decisions.map(d=>
+    Object.assign(document.createElement('div'),{className:'d', textContent:d.text, title:`bar ${d.bar} · ${d.name} · ${d.text}`})));
+}
+function jevOutcome(ans,text,byJev=true){
   const e=ans && ansEntry.get(ans);
   if(!e) return;
-  e.out.push(text);
-  renderJevLog();
+  if(!byJev){ e.out.push(text); renderJevLog(); return; }
+  decisions.unshift({bar:barCount, name:e.name, text});
+  if(decisions.length>DECISION_MAX) decisions.pop();
+  renderDecisions();
 }
 // 選んだ選択肢を、音楽の言葉にする
 const MODE_NAME={break:'break', mix:'DJ mix', morph:'morph'};
@@ -3870,7 +3898,7 @@ function jevChoice(ans,qid,allowed=()=>true,{always=false}={}){
   const k = (a && a.probs && (always || Math.random()<jevInfl())) ? sampleProbs(a.probs,allowed) : null;
   if(k===null){
     jev.local++;
-    if(a && a.probs) jevOutcome(ans,`${qid}: decided by local rules`);
+    if(a && a.probs) jevOutcome(ans,`${qid}: decided by local rules`,false);
     return null;
   }
   jev.used++;
@@ -3886,7 +3914,7 @@ function jevRoll(ans,qid,localP,gate=1,map=p=>p){
   const byJev = has && Math.random()<jevInfl();
   const p = byJev ? map(clamp(tempP(a.p)*gate)) : localP;
   if(byJev){ jev.used++; jev.last=`${qid} ${pct(p)}`; } else jev.local++;
-  if(has && !byJev) jevOutcome(ans,`${qid}: decided by local rules`);
+  if(has && !byJev) jevOutcome(ans,`${qid}: decided by local rules`,false);
   jev.roll = byJev ? {ans, p} : null;
   return Math.random()<p;
 }
