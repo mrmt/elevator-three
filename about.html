@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>About — Elevator Three</title>
+<style>
+  /* 本体 (index.html) の EK の見た目を踏襲する。漆黒の筐体に黄色のアクセント、細い罫線で囲んだモジュール */
+  :root{
+    --bg:#08080A;
+    --box:#0B0B0D;
+    --panel:rgba(255,255,255,.045);
+    --line:rgba(255,255,255,.16);
+    --ink:#F4F4EE;
+    --body:rgba(244,244,238,.84);
+    --dim:rgba(244,244,238,.5);
+    --amber:#FFE20A;
+    --disp:'Helvetica Neue','Arial Narrow','Hiragino Sans','Hiragino Kaku Gothic ProN',sans-serif;
+    --data:'Menlo','Monaco',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;scroll-padding-top:4.2rem}
+  body{
+    background:var(--bg);color:var(--ink);font-family:var(--disp);
+    -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.8;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  a{color:var(--amber)}
+  :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+  /* ---- ヘッダー (本体と同じ並び) ---- */
+  header{
+    position:sticky;top:0;z-index:10;
+    display:flex;align-items:center;gap:1rem;
+    padding:.8rem 1.2rem .7rem;background:var(--box);border-bottom:1px solid var(--line);
+  }
+  .home{display:block;flex:none;width:1.05rem;height:1.05rem;color:var(--ink);line-height:0}
+  .home svg{display:block;width:100%;height:100%}
+  .mark{font-size:.95rem;letter-spacing:.42em;text-transform:uppercase;white-space:nowrap}
+  .sub{font-size:.68rem;letter-spacing:.24em;color:var(--dim);text-transform:uppercase;white-space:nowrap}
+  .nav{margin-left:auto;display:flex;gap:.5rem;flex:none}
+  .tbtn{
+    border:1px solid var(--line);background:var(--panel);color:var(--ink);text-decoration:none;
+    padding:.42rem .9rem;font-size:.64rem;letter-spacing:.24em;text-transform:uppercase;line-height:1.4;white-space:nowrap;
+    transition:border-color .16s,color .16s,background .16s;
+  }
+  .tbtn:hover{border-color:var(--amber);color:var(--amber)}
+  .tbtn.play{background:var(--amber);border-color:var(--amber);color:#08080A}
+  .tbtn.play:hover{color:#08080A;filter:brightness(1.08)}
+  .tbtn .short{display:none}
+
+  /* ---- 本文 ---- */
+  main{max-width:46rem;margin:0 auto;padding:1.6rem 1.2rem 4rem}
+  article + article{margin-top:3.2rem;padding-top:2.4rem;border-top:1px solid var(--line)}
+  h1{
+    font-size:1.3rem;font-weight:500;letter-spacing:.06em;line-height:1.5;margin-bottom:.35rem;
+  }
+  .lead{color:var(--dim);font-size:.9rem;margin-bottom:.6rem}
+  section.box{border:1px solid var(--line);background:var(--box);padding:1rem 1.1rem 1.15rem;margin-top:1rem}
+  h2{
+    display:block;font-size:.66rem;letter-spacing:.26em;text-transform:uppercase;font-weight:700;line-height:1.6;
+    border:1px solid var(--line);border-left:3px solid var(--amber);padding:.22rem .5rem;margin-bottom:.85rem;
+  }
+  h3{
+    font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);font-weight:400;
+    margin:1.15rem 0 .35rem;
+  }
+  p,li,td{color:var(--body)}
+  p + p{margin-top:.55rem}
+  ul{margin:.45rem 0 .2rem 1.1rem}
+  li + li{margin-top:.2rem}
+  b,strong{color:var(--ink);font-weight:600}
+  code,kbd{font-family:var(--data);font-size:.82em;color:var(--amber);white-space:nowrap}
+  kbd{border:1px solid var(--line);padding:.02rem .35rem;background:var(--panel)}
+
+  /* すぐに鳴らす。本体のステップキーのような番号を付ける */
+  .quick{border-left:3px solid var(--amber)}
+  ol.steps{list-style:none;counter-reset:s;margin:.2rem 0 .4rem}
+  ol.steps li{counter-increment:s;position:relative;padding-left:2.4rem;margin-top:.7rem}
+  ol.steps li::before{
+    content:counter(s);position:absolute;left:0;top:.15rem;
+    width:1.6rem;height:1.6rem;display:flex;align-items:center;justify-content:center;
+    font-family:var(--data);font-size:.8rem;color:#08080A;background:var(--amber);
+    box-shadow:0 0 10px rgba(255,226,10,.45);
+  }
+  ol.steps li strong{font-size:1.02rem}
+  .playglyph{
+    display:inline-flex;align-items:center;justify-content:center;vertical-align:-.3em;
+    width:1.5rem;height:1.5rem;border:2px solid var(--amber);border-radius:50%;
+    color:var(--amber);font-size:.62rem;padding-left:.12rem;margin:0 .15rem;
+  }
+  .note{font-size:.85rem;color:var(--dim);margin-top:.8rem}
+
+  /* 表 */
+  .tw{overflow-x:auto;margin-top:.35rem}
+  table{width:100%;border-collapse:collapse;font-size:.86rem;line-height:1.6}
+  th,td{text-align:left;vertical-align:top;padding:.42rem .5rem;border-bottom:1px solid var(--line)}
+  th{font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:400;white-space:nowrap}
+  td.k{font-family:var(--data);font-size:.8rem;color:var(--ink);white-space:nowrap}
+  td.v{font-family:var(--data);font-size:.74rem;color:var(--amber);white-space:nowrap}
+  tr.grp td{
+    font-size:.56rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(214,226,232,.45);
+    padding-top:.9rem;border-bottom:none;
+  }
+
+  /* monitor の表示例 */
+  pre.mon{
+    font-family:var(--data);font-size:.72rem;line-height:1.75;color:var(--dim);
+    border:1px solid var(--line);background:#050506;padding:.6rem .75rem;margin:.5rem 0 .3rem;overflow-x:auto;
+  }
+  pre.mon b{color:var(--ink);font-weight:400}
+  pre.mon i{font-style:normal;color:var(--amber)}
+  dl.mon dt{font-family:var(--data);font-size:.78rem;color:var(--ink);margin-top:.6rem}
+  dl.mon dd{color:var(--body);margin-left:1rem}
+
+  /* ステップ列の凡例。本体のキーと同じ色 */
+  .key{display:inline-block;width:.95rem;height:.95rem;vertical-align:-.15em;border-radius:2px;border:1px solid rgba(255,255,255,.13);margin-right:.2rem}
+  .key.now{background:var(--amber);border-color:var(--amber);box-shadow:0 0 6px rgba(255,226,10,.7)}
+  .key.on{background:#2A2A16;border-color:rgba(255,226,10,.4)}
+  .key.hat{background:#1D2226}
+  .key.off{background:#141416}
+
+  footer{
+    max-width:46rem;margin:0 auto;padding:1.2rem 1.2rem 2.4rem;
+    font-family:var(--data);font-size:.62rem;color:var(--dim);border-top:1px solid var(--line);
+  }
+
+  @media (max-width:640px){
+    body{font-size:14px}
+    header{gap:.6rem;padding:.6rem .8rem .55rem}
+    header .tag{display:none}
+    .mark{letter-spacing:.3em;font-size:.85rem}
+    .tbtn{padding:.4rem .55rem;letter-spacing:.14em}
+    /* 狭い画面ではボタンが入りきらないので、言語の表記を短くする */
+    .tbtn .long{display:none}
+    .tbtn .short{display:inline}
+    /* 範囲と既定値は折り返してよい。表を横に動かさずに読めるようにする */
+    td.v{white-space:normal}
+    main{padding:1.2rem .9rem 3rem}
+    section.box{padding:.9rem .85rem 1rem}
+  }
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="home" href="../" aria-label="home"><svg viewBox="0 0 512 512" aria-hidden="true"><g fill="currentColor">
+    <path fill-rule="evenodd" d="M48 0H464A48 48 0 0 1 512 48V464A48 48 0 0 1 464 512H48A48 48 0 0 1 0 464V48A48 48 0 0 1 48 0ZM72 34H440A38 38 0 0 1 478 72V440A38 38 0 0 1 440 478H72A38 38 0 0 1 34 440V72A38 38 0 0 1 72 34Z"/>
+    <path d="M149 122L241 210L241 270L170 208V381H128V208L59 270V210Z"/>
+    <path d="M342 135H385V310L457 247V306L364 394L272 307V247L342 310Z"/>
+  </g></svg></a>
+  <div class="mark">Elevator Three</div>
+  <div class="sub tag">about</div>
+  <nav class="nav">
+    <a class="tbtn" href="#ja" lang="ja"><span class="long">日本語</span><span class="short">JA</span></a>
+    <a class="tbtn" href="#en" lang="en"><span class="long">English</span><span class="short">EN</span></a>
+    <a class="tbtn play" href="index.html">open ▶</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ============================== 日本語 ============================== -->
+<article id="ja" lang="ja">
+  <h1>Elevator Three について</h1>
+  <p class="lead">ブラウザの中で、自動生成のエレクトロを鳴らし続ける楽器。</p>
+
+  <section class="box quick">
+    <h2>すぐに鳴らす</h2>
+    <ol class="steps">
+      <li><strong><a href="index.html">楽器のページを開く</a></strong><br>
+        パソコンでもスマートフォンでも、ブラウザで開くだけでよい。インストールもアカウントも要らない。</li>
+      <li><strong>真ん中の大きな <span class="playglyph" aria-hidden="true">▶</span> を押す</strong><br>
+        押すまで音は出ない (ブラウザが、ページを開いただけで音を出すことを禁じているため)。
+        右上の小さな ▶ / ❚❚ でも、キーボードの <kbd>Space</kbd> でも、再生と停止を切り替えられる。</li>
+      <li><strong>あとは聴くだけ</strong><br>
+        数分ごとに曲調が移り変わり、同じ展開は二度と来ない。音量は <b>control</b> の <code>volume</code> で変える。
+        スマートフォンでは、画面上部の <code>param</code> タブにある。</li>
+    </ol>
+    <p class="note">音はすべてその場で合成していて、ネットワークには一切繋がらない。音が出ないときは、端末の音量と、ほかのタブが音を出していないかを確かめる。</p>
+  </section>
+
+  <section class="box">
+    <h2>これは何か</h2>
+    <p>minimal techno を土台に、electro funk、dub techno、グリッチを混ぜたエレクトロを、止めるまで生成し続ける。
+      作曲された曲を再生しているのではなく、1小節ごとに並びを組み、数分ごとにシーン (曲調) を乗り換えていく。</p>
+    <p>ドラムは TR-808 に倣った方式で毎回合成し、ベースは矩形波をデチューンして重ねて Ladder フィルタに通す。
+      サンプルは使っていない。和音は、ダブのスタブ、積み上がる strings、Rhodes 系の e.piano という性格の違う回路を持ち、シーンがどれを使うかを選ぶ。</p>
+    <p>全体が1枚の HTML ファイルで動く。</p>
+  </section>
+
+  <section class="box">
+    <h2>画面の見方</h2>
+    <h3>ヘッダー</h3>
+    <p>左から、エレベーターのアイコン (上の階層へのリンク)、タイトル、バージョン、いま鳴っているシーン名、再生 / 一時停止。
+      シーンが変わる直前の1小節は、<b>シーン名が点滅</b>する。</p>
+    <h3>scene 欄</h3>
+    <p>14のシーンが4つの群に分かれて並ぶ。押すとそのシーンへすぐ切り替わる。放っておけば自動で次へ移る。</p>
+    <h3>param 欄</h3>
+    <ul>
+      <li><b>control</b> — 曲全体の性格と進み方を決めるスライダー、<code>next</code> と <code>loop bar</code></li>
+      <li><b>monitor</b> — BPM、小節、出力の波形、16ステップ、いま何が起きているかの表示</li>
+      <li><b>mixer</b> — 音源ごとの音量と SOLO / MUTE</li>
+    </ul>
+    <p>画面が狭いときは、上部の <code>scene</code> / <code>param</code> タブで切り替える。</p>
+  </section>
+
+  <section class="box">
+    <h2>曲の進み方</h2>
+    <p>時間は3つの階層で動く。</p>
+    <h3>1. シーン — 2〜5分</h3>
+    <p>曲調のまとまり。使う和音の回路、ドラムのキット、BPM、陰陽 (dark-bright) の位置を持つ。
+      長さは <code>evolution</code> で決まり、上げるほど短くなる。</p>
+    <div class="tw"><table>
+      <thead><tr><th>scene</th><th>BPM</th><th>性格</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="3">stab / dark — 短調、ダブのスタブ</td></tr>
+        <tr><td class="k">submerge</td><td class="v">118</td><td>最深部。キック、サブベース、スタブだけ。ディレイは発振寸前</td></tr>
+        <tr><td class="k">moss</td><td class="v">120</td><td>中域のノイズのパーカッションが増える。dub out のフレーズが最も出やすい</td></tr>
+        <tr><td class="k">frost</td><td class="v">122</td><td>高域のグリッチと金属質のパーカッション。冷たい陰</td></tr>
+        <tr><td class="k">pulse</td><td class="v">121</td><td>キックが強く、ベースのフィルタが大きくうねる。陰だが体は動く</td></tr>
+        <tr class="grp"><td colspan="3">jazz &amp; bossa — ドリアン、e.piano</td></tr>
+        <tr><td class="k">drowse</td><td class="v">119</td><td>ゆったりした ii–V。e.piano が主役</td></tr>
+        <tr><td class="k">glass</td><td class="v">125</td><td>テンションの和音を短く刺す。ジャズとダブの中間</td></tr>
+        <tr><td class="k">dusk</td><td class="v">122</td><td>maj9 とボサノヴァ風のシンコペーション。彩りが前に出る</td></tr>
+        <tr class="grp"><td colspan="3">electro funk — 短調のペンタトニック</td></tr>
+        <tr><td class="k">gear</td><td class="v">121</td><td>機械的で硬いエレクトロ。裏で細かく噛み合う</td></tr>
+        <tr><td class="k">bounce</td><td class="v">123</td><td>808 のシンコペーション、ベースが主導。持続音は薄く敷くだけ</td></tr>
+        <tr><td class="k">steel</td><td class="v">127</td><td>硬質なエレクトロ。グリッチが多い</td></tr>
+        <tr><td class="k">spark</td><td class="v">129</td><td>速く明るいファンク。積んでは戻すを繰り返す</td></tr>
+        <tr class="grp"><td colspan="3">sustain / bright — 長調、積み上がる strings</td></tr>
+        <tr><td class="k">daybreak</td><td class="v">126</td><td>add9 の持続音。層を積み上げていく基本形で、最も素直な高揚</td></tr>
+        <tr><td class="k">dash</td><td class="v">132</td><td>最速。アルペジオ主体で、積み上がるのが速い</td></tr>
+        <tr><td class="k">jubilee</td><td class="v">130</td><td>天井まで積んで戻すを繰り返す。最も派手</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">BPM は各シーンの基準値。<code>BPM</code> スライダーを動かすと、全シーンが同じだけずれる。</p>
+
+    <h3>次のシーンの選ばれ方</h3>
+    <p>20〜40分で陰 (dark) と陽 (bright) を往復する、ゆっくりした波がある。次のシーンは、波のいまの位置に近い5つの中から、
+      直近に出たものを避け、8割の確率で別の群を選ぶ。回路もキットも入れ替わるので、乗り換えがはっきり聞こえる。</p>
+    <p>乗り換え方は3通りから選ばれる。</p>
+    <ul>
+      <li><b>break</b> — 8小節かけ、最後の1小節で音を抜いてから乗り換える</li>
+      <li><b>morph</b> — 同じ群・同じキットの相手へ、16小節かけて境目なく移る。調も保つ</li>
+      <li><b>mix</b> — DJ のように、次のシーンのドラムをハイパスを開きながら16小節かけて重ね、入れ替える</li>
+    </ul>
+    <p>乗り換えの直前の1小節は、ヘッダーのシーン名が点滅し、<b>40% でダブ、それ以外はドラムのフィル</b>が入る。</p>
+
+    <h3>2. フレーズ — 16小節</h3>
+    <p>シーンの中の起伏。<code>plateau</code> (定常)、<code>build</code> (層を積み上げ、ドラムのフィルタを開いていく)、
+      <code>break</code> (1小節だけ抜く)、<code>drop</code> (戻し)、<code>dub out</code> (ディレイに預ける) のどれかで、出やすさはシーンごとに違う。
+      8小節ごとの折り返しの手前にはドラムのフィルが入る。</p>
+
+    <h3>3. イベント — 4小節ごと</h3>
+    <p>節目ごとに、確率で仕掛けが入る。</p>
+    <ul>
+      <li><code>filter sweep</code> — ドラムだけを閉じてから2小節かけて開く</li>
+      <li><code>master filter</code> — 全体を閉じてから開く</li>
+      <li><code>hats out</code> / <code>kick out</code> — ハット / キックを抜く</li>
+      <li><code>glitch</code> — 小節の終わりを32分で刻み直す</li>
+      <li><code>delay surge</code> — ディレイのフィードバックを跳ね上げる</li>
+      <li><code>reverse</code> — 逆再生のように膨らんで次の小節へ入る</li>
+      <li><code>phaser</code> — 4小節かけてフェーザーを掛けて引く</li>
+      <li><code>seq sweep</code> — 16分のシーケンスのフィルタを上げ下げする。ときどき発振寸前まで</li>
+    </ul>
+
+    <h3>ときどき現れるもの</h3>
+    <ul>
+      <li><b>キラキラのリフ</b> — 鋸波と FM のベルを重ねた短い旋律。毎分1〜2回だけ</li>
+      <li><b>ダブ</b> — 1小節だけドラムを落として全体をディレイに放り込み、フィルで戻す。electro funk で出やすい</li>
+      <li><b>インダストリアル・ノイズ</b> — 小節に乗らない周期で回る金属音。左右で別の周期を持ち、ポリリズムになる</li>
+    </ul>
+  </section>
+
+  <section class="box">
+    <h2>操作</h2>
+    <h3>control</h3>
+    <div class="tw"><table>
+      <thead><tr><th>名前</th><th>範囲 / 既定</th><th>効き方</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="3">master</td></tr>
+        <tr><td class="k">volume</td><td class="v">0–100 / 80</td><td>出力の音量</td></tr>
+        <tr><td class="k">BPM</td><td class="v">110–140 / 125</td><td>テンポの中心。各シーンの BPM がこの前後に平行移動する。テンポは急に飛ばず、数秒かけて寄る</td></tr>
+        <tr><td class="k">glide</td><td class="v">3–120s / 5s</td><td>下の character などのスライダーを動かしたとき、音が目標に追いつくまでの時間。リズムは拍に従うので影響しない</td></tr>
+        <tr class="grp"><td colspan="3">scene</td></tr>
+        <tr><td class="k">next</td><td class="v">—</td><td>いまのシーンを切り上げて次へ。再生中は4小節で乗り換え、それまで点滅する。止まっているときはすぐ切り替わる</td></tr>
+        <tr><td class="k">loop bar</td><td class="v">on / off</td><td>いま鳴っている小節の並びを繰り返す。シーン・フレーズ・イベントは解除するまで待つ。音色やテンポの変化は続く。有効な間は点滅する</td></tr>
+        <tr class="grp"><td colspan="3">character</td></tr>
+        <tr><td class="k">dark-bright</td><td class="v">0–1 / 波に従う</td><td>陰 (ダブ寄り) と陽 (高揚寄り)。フィルタの明るさ、ベースの刻み方、和音の開きが変わる。ふだんは上で書いた長い波に従って動く</td></tr>
+        <tr><td class="k">density</td><td class="v">0–1 / 0.45</td><td>ハットやパーカッション、シーケンス、和音の連打などの詰まり具合</td></tr>
+        <tr><td class="k">weight</td><td class="v">0–1 / 0.10</td><td>ベースとキックの量と重さ。上げるとキックの音程が下がり、長く鳴る</td></tr>
+        <tr><td class="k">drive</td><td class="v">0–1 / 0.50</td><td>ドラムとベースのサチュレーションとコンプの深さ、Ladder フィルタのレゾナンス</td></tr>
+        <tr><td class="k">space</td><td class="v">0–1 / 0.10</td><td>リバーブとディレイの量</td></tr>
+        <tr class="grp"><td colspan="3">motion</td></tr>
+        <tr><td class="k">glitch</td><td class="v">0–1 / 0.90</td><td>グリッチ系のイベント (<code>glitch</code>、<code>reverse</code>) の出やすさ</td></tr>
+        <tr><td class="k">evolution</td><td class="v">0–1 / 0.90</td><td>シーンの長さ (0 で約5分、1 で約2分) と、フレーズが8小節で早めに切り替わる確率</td></tr>
+        <tr><td class="k">mutate</td><td class="v">0–1 / 0.80</td><td>リズムの並びが書き換わる確率。0 に近いほど同じ並びを繰り返す</td></tr>
+        <tr class="grp"><td colspan="3">tonality</td></tr>
+        <tr><td class="k">shift</td><td class="v">0–1 / 0.5</td><td>形を保ったまま調を平行にずらす転調。3度の横滑りを主に、盛り上げでの全音上げ、ベースだけ前の音に留まるペダルも入る。0 なら五度圏の近い調へ移るだけ</td></tr>
+        <tr><td class="k">lush</td><td class="v">0–1 / 0.5</td><td>e.piano と strings の回路で、テンションの多い和音を開いた配置で置き、声部を滑らかに運ぶ。分数コードや内声の半音の動きも入る</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">character / motion / tonality のスライダーを触ると、シーン名に <code>(edit)</code> が付き、dark-bright は波に戻されなくなる。
+      次のシーンに入ると (手で選んでも、自動で移っても) 元に戻る。<code>reset all</code> はすべてのスライダーを既定値に戻す (mixer の保存値と SOLO / MUTE も消す)。</p>
+
+    <h3>mixer</h3>
+    <p>音源ごとの量を 0–200% で変える (100% が標準)。値はこのブラウザに保存され、次に開いたときも残る。</p>
+    <div class="tw"><table>
+      <thead><tr><th>群</th><th>スライダー</th></tr></thead>
+      <tbody>
+        <tr><td class="k">drums</td><td>kick、snare、clap、closed hat、open hat、cymbal、tom、rim、perc、cowbell</td></tr>
+        <tr><td class="k">bass</td><td>funk bass (electro funk のシーン)、other bass (それ以外のシーン)</td></tr>
+        <tr><td class="k">harmony</td><td>strings (持続音・アルペジオ・高域のリフ)、chord chop、stab、e.piano、sequence (16分のシーケンス)</td></tr>
+        <tr><td class="k">riff</td><td>riff synth (リフの本体)、riff bell (FM のベル)、bell FM ratio (ベルの変調比に掛ける倍率 ×0.5–2)</td></tr>
+        <tr><td class="k">texture</td><td>industrial noise</td></tr>
+      </tbody>
+    </table></div>
+    <p>各行の <kbd>S</kbd> は SOLO、<kbd>M</kbd> は MUTE。どれかを SOLO にすると SOLO した音だけが鳴り、MUTE は SOLO より優先される。
+      鳴っていない行は薄く表示される。SOLO / MUTE は保存されない。</p>
+
+    <h3>キーボードとメディアキー</h3>
+    <ul>
+      <li><kbd>Space</kbd> — 再生 / 停止 (スライダーなどを操作していないとき)</li>
+      <li>ロック画面やキーボードのメディアキー — 再生、一時停止、次のトラック (= 次のシーン)</li>
+    </ul>
+  </section>
+
+  <section class="box">
+    <h2>monitor の読み方</h2>
+    <p>見出しの右に <code>BPM</code> と <code>bar</code> (シーンに入ってからの小節)、その下に出力の波形、16ステップ、進行の表示が並ぶ。</p>
+    <p><span class="key now"></span>いま鳴っている16分
+      <span class="key on" style="margin-left:.8rem"></span>キック / スネア / クラップ
+      <span class="key hat" style="margin-left:.8rem"></span>ハット
+      <span class="key off" style="margin-left:.8rem"></span>休み</p>
+<pre class="mon">phrase <b>build → dash (break)</b> 5/16  (scene 57/64)  fill  loop
+event <i>filter sweep  @bar 48</i>
+dark-bright wave <b>0.62  41%  / 31min</b>
+key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal  noise 7/11</pre>
+    <dl class="mon">
+      <dt>phrase build → dash (break)</dt>
+      <dd>いまのフレーズ。乗り換えが始まると、行き先のシーンと乗り換え方が矢印の後に出る</dd>
+      <dt>5/16  (scene 57/64)  fill  loop</dt>
+      <dd>フレーズの何小節目か、シーンの何小節目か。その小節にフィルかダブが入っていれば <code>fill</code> / <code>dub</code>、ループ中は <code>loop</code></dd>
+      <dt>event filter sweep  @bar 48</dt>
+      <dd>最後に起きたイベントと、その小節 (再生を始めてからの通し番号)</dd>
+      <dt>dark-bright wave 0.62  41%  / 31min</dt>
+      <dd>長い波が示す陰陽の値、1周期のうちの位置、1周期の長さ</dd>
+      <dt>key A dorian +3</dt>
+      <dd>主音と音階。<code>shift</code> で平行にずれている間は、そのずれ (半音) が付く</dd>
+      <dt>Cmaj9/D  [sustain lush chop + ep]</dt>
+      <dd>いまの和音 (分数コードなら低音も) と、鳴っている和音の回路。<code>lush</code> は開いた和声、<code>chop</code> は持続音の代わりに短い和音を刻む状態、<code>+ ep</code> は e.piano が差し込まれている状態</dd>
+      <dt>bass 3 +phaser +pedal</dt>
+      <dd>この小節のベースの音数と、掛かっている仕掛け (<code>+phaser</code> 音数が少ない小節、<code>+wobble</code> 音程が動かない小節のフィルタの揺れ、<code>+vibrato</code> 音程の揺らぎ、<code>+pedal</code> ペダル)</dd>
+      <dt>noise 7/11</dt>
+      <dd>インダストリアル・ノイズが鳴っているとき、左右それぞれの周期 (16分の数)</dd>
+    </dl>
+  </section>
+
+  <section class="box">
+    <h2>使いこなしのヒント</h2>
+    <ul>
+      <li>ひとつの並びをじっくり聴くなら <code>mutate</code> を下げる。気に入った瞬間を留めたいなら <code>loop bar</code></li>
+      <li>展開を速くしたいなら <code>evolution</code> を上げる。ゆっくり浸るなら下げる</li>
+      <li>何が鳴っているか分解して聴きたいときは、mixer の <kbd>S</kbd> で1つずつ聴く</li>
+      <li>ジャズ寄りの響きが欲しければ、jazz &amp; bossa か sustain のシーンで <code>lush</code> を上げる。場面の転換を大胆にしたければ <code>shift</code></li>
+      <li>わからなくなったら <code>reset all</code></li>
+    </ul>
+  </section>
+
+  <section class="box">
+    <h2>仕組み</h2>
+    <ul>
+      <li>音はすべて Web Audio API で合成している。ドラムは TR-808 の方式に倣い、キットは4種 (deep / hard / warm / electro)</li>
+      <li>ベースは、パルス幅を揺らした矩形波3本とサブをまとめて歪ませ、AudioWorklet で書いた Ladder フィルタ、深いコンプの順に通す</li>
+      <li>和音の回路は3つ。stab (短い鋸波の和音をディレイへ送る)、strings (層を積み上げる持続音とアルペジオ)、e.piano (FM による Rhodes 系の音と Juno 風のコーラス)</li>
+      <li>16分のシーケンスは専用のピンポン・ディレイを持つ</li>
+      <li>時計は AudioWorklet の音声スレッドで回すので、タブが裏に回ったり画面を消したりしても、進行が止まりにくい</li>
+      <li>個別の音量は、このブラウザの localStorage に保存される。サーバーには何も送らない</li>
+    </ul>
+    <p>ソースコードと設計の記録は GitHub にある — <a href="https://github.com/mrmt/elevator-three">github.com/mrmt/elevator-three</a></p>
+  </section>
+</article>
+
+<!-- ============================== English ============================== -->
+<article id="en" lang="en">
+  <h1>About Elevator Three</h1>
+  <p class="lead">An instrument that keeps generating electronic music in your browser.</p>
+
+  <section class="box quick">
+    <h2>Start playing</h2>
+    <ol class="steps">
+      <li><strong><a href="index.html">Open the instrument</a></strong><br>
+        It runs in any modern browser, on a computer or a phone. Nothing to install, no account.</li>
+      <li><strong>Press the big <span class="playglyph" aria-hidden="true">▶</span> in the middle</strong><br>
+        Nothing plays until you do: browsers do not allow a page to make sound on its own.
+        The small ▶ / ❚❚ at the top right and the <kbd>Space</kbd> key also start and stop it.</li>
+      <li><strong>Just listen</strong><br>
+        The music moves on to a new mood every few minutes and never repeats itself.
+        Change the level with <code>volume</code> under <b>control</b> — on a phone, open the <code>param</code> tab first.</li>
+    </ol>
+    <p class="note">Everything is synthesised on the spot and nothing is sent over the network. If you hear nothing, check your device volume and whether another tab is holding the audio.</p>
+  </section>
+
+  <section class="box">
+    <h2>What it is</h2>
+    <p>A never-ending generator of minimal techno, laced with electro funk, dub techno and glitch.
+      It does not play back composed tracks: it builds each bar as it goes and switches scenes every few minutes.</p>
+    <p>The drums are synthesised in the manner of a TR-808 on every hit, and the bass is a stack of detuned pulse waves through a ladder filter.
+      There are no samples. Harmony comes from separate circuits with distinct characters — dub stabs, stacking strings and a Rhodes-style e.piano — and each scene picks which one to use.</p>
+    <p>The whole thing is a single HTML file.</p>
+  </section>
+
+  <section class="box">
+    <h2>The screen</h2>
+    <h3>Header</h3>
+    <p>From the left: the elevator icon (a link to the parent page), the title, the version, the current scene, and play / pause.
+      During the last bar before a scene change, <b>the scene name blinks</b>.</p>
+    <h3>scene</h3>
+    <p>Fourteen scenes in four groups. Tap one to switch to it straight away; otherwise the instrument moves on by itself.</p>
+    <h3>param</h3>
+    <ul>
+      <li><b>control</b> — sliders for the overall character and pacing, plus <code>next</code> and <code>loop bar</code></li>
+      <li><b>monitor</b> — BPM, bar, the output waveform, the 16 steps and a readout of what is happening</li>
+      <li><b>mixer</b> — levels for each sound, with solo and mute</li>
+    </ul>
+    <p>On narrow screens, switch between them with the <code>scene</code> / <code>param</code> tabs at the top.</p>
+  </section>
+
+  <section class="box">
+    <h2>How the music unfolds</h2>
+    <p>Time runs on three levels.</p>
+    <h3>1. Scenes — 2 to 5 minutes</h3>
+    <p>A scene sets the harmony circuit, the drum kit, the tempo and a position between dark and bright.
+      Its length follows <code>evolution</code>: the higher, the shorter.</p>
+    <div class="tw"><table>
+      <thead><tr><th>scene</th><th>BPM</th><th>character</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="3">stab / dark — minor, dub stabs</td></tr>
+        <tr><td class="k">submerge</td><td class="v">118</td><td>The deepest point. Kick, sub bass and stabs only; the delay sits just short of self-oscillation.</td></tr>
+        <tr><td class="k">moss</td><td class="v">120</td><td>Mid-range noise percussion comes in. Dub-out phrases turn up most often here.</td></tr>
+        <tr><td class="k">frost</td><td class="v">122</td><td>High glitches and metallic percussion. The cold side of the dark.</td></tr>
+        <tr><td class="k">pulse</td><td class="v">121</td><td>A heavier kick and a bass filter that swings wide. Dark, but it moves.</td></tr>
+        <tr class="grp"><td colspan="3">jazz &amp; bossa — dorian, e.piano</td></tr>
+        <tr><td class="k">drowse</td><td class="v">119</td><td>An unhurried ii–V with the e.piano out front.</td></tr>
+        <tr><td class="k">glass</td><td class="v">125</td><td>Short, stabbed tension chords. Halfway between jazz and dub.</td></tr>
+        <tr><td class="k">dusk</td><td class="v">122</td><td>maj9 chords and bossa syncopation. Colour takes the lead.</td></tr>
+        <tr class="grp"><td colspan="3">electro funk — minor pentatonic</td></tr>
+        <tr><td class="k">gear</td><td class="v">121</td><td>Mechanical, hard-edged electro that interlocks underneath.</td></tr>
+        <tr><td class="k">bounce</td><td class="v">123</td><td>808 syncopation led by the bass. Sustained chords stay in the background.</td></tr>
+        <tr><td class="k">steel</td><td class="v">127</td><td>Hard-edged electro with plenty of glitch.</td></tr>
+        <tr><td class="k">spark</td><td class="v">129</td><td>Fast, bright funk that stacks up and drops, over and over.</td></tr>
+        <tr class="grp"><td colspan="3">sustain / bright — major, stacking strings</td></tr>
+        <tr><td class="k">daybreak</td><td class="v">126</td><td>Sustained add9 chords. Layers building up in their plainest form — the most straightforward lift.</td></tr>
+        <tr><td class="k">dash</td><td class="v">132</td><td>The fastest. Arpeggio led, and it builds quickly.</td></tr>
+        <tr><td class="k">jubilee</td><td class="v">130</td><td>Stacks to the ceiling and drops, again and again. The showiest scene.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">These are base tempos. Moving the <code>BPM</code> slider shifts every scene by the same amount.</p>
+
+    <h3>Choosing the next scene</h3>
+    <p>A slow wave travels from dark to bright and back over 20 to 40 minutes. The next scene is drawn from the five closest to where the wave is,
+      skipping recent ones and, four times out of five, jumping to a different group — so the circuit and the kit both change and you hear the move.</p>
+    <p>The switch itself happens in one of three ways:</p>
+    <ul>
+      <li><b>break</b> — over eight bars, dropping everything out for the final bar before the new scene lands</li>
+      <li><b>morph</b> — a seamless sixteen-bar glide to a scene in the same group with the same kit, keeping the key</li>
+      <li><b>mix</b> — like a DJ blend: the next scene's drums come in over sixteen bars as a high-pass filter opens</li>
+    </ul>
+    <p>In the last bar before the switch, the scene name blinks and you get <b>a dub-out 40% of the time, otherwise a drum fill</b>.</p>
+
+    <h3>2. Phrases — 16 bars</h3>
+    <p>The shape inside a scene: <code>plateau</code>, <code>build</code> (adding layers while the drum filter opens),
+      <code>break</code> (a single bar out), <code>drop</code> and <code>dub out</code> (handing things over to the delay). Each scene weights them differently.
+      A drum fill leads into every eight-bar turn.</p>
+
+    <h3>3. Events — every 4 bars</h3>
+    <p>At each four-bar boundary, something may happen:</p>
+    <ul>
+      <li><code>filter sweep</code> — the drums close down, then open again over two bars</li>
+      <li><code>master filter</code> — the same for the whole mix</li>
+      <li><code>hats out</code> / <code>kick out</code> — the hats or the kick drop out</li>
+      <li><code>glitch</code> — the end of the bar is re-cut in 32nds</li>
+      <li><code>delay surge</code> — the delay feedback jumps up</li>
+      <li><code>reverse</code> — a reversed-sounding swell into the next bar</li>
+      <li><code>phaser</code> — a phaser fades in and out over four bars</li>
+      <li><code>seq sweep</code> — the 16th-note sequence's filter rises and falls, sometimes ringing close to self-oscillation</li>
+    </ul>
+
+    <h3>Occasional guests</h3>
+    <ul>
+      <li><b>Sparkling riff</b> — a short line of saws with an FM bell on top, only once or twice a minute</li>
+      <li><b>Dub</b> — for one bar the drums drop and everything is thrown into the delay, then a fill brings it back. Most common in electro funk</li>
+      <li><b>Industrial noise</b> — metallic hits on cycles that ignore the bar line, with different lengths left and right, so they drift into polyrhythm</li>
+    </ul>
+  </section>
+
+  <section class="box">
+    <h2>Controls</h2>
+    <h3>control</h3>
+    <div class="tw"><table>
+      <thead><tr><th>name</th><th>range / default</th><th>what it does</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="3">master</td></tr>
+        <tr><td class="k">volume</td><td class="v">0–100 / 80</td><td>Output level</td></tr>
+        <tr><td class="k">BPM</td><td class="v">110–140 / 125</td><td>Tempo centre. Every scene's tempo shifts around it; changes glide in over a few seconds rather than jumping</td></tr>
+        <tr><td class="k">glide</td><td class="v">3–120s / 5s</td><td>How long the sound takes to catch up when you move the character, motion and tonality sliders. Rhythm follows the beat and is not affected</td></tr>
+        <tr class="grp"><td colspan="3">scene</td></tr>
+        <tr><td class="k">next</td><td class="v">—</td><td>Cut the current scene short. While playing, the switch comes after four bars and the button blinks until then; when stopped it switches at once</td></tr>
+        <tr><td class="k">loop bar</td><td class="v">on / off</td><td>Repeat the bar that is playing. Scenes, phrases and events wait until you release it, while sound and tempo keep drifting. Blinks while active</td></tr>
+        <tr class="grp"><td colspan="3">character</td></tr>
+        <tr><td class="k">dark-bright</td><td class="v">0–1 / follows the wave</td><td>From dark (dub) to bright (uplifting): filter brightness, how the bass is played and how open the harmony is. Normally it rides the slow wave described above</td></tr>
+        <tr><td class="k">density</td><td class="v">0–1 / 0.45</td><td>How busy the hats, percussion, sequence and chord chops are</td></tr>
+        <tr><td class="k">weight</td><td class="v">0–1 / 0.10</td><td>Amount and heft of bass and kick. Higher lowers the kick's pitch and lengthens it</td></tr>
+        <tr><td class="k">drive</td><td class="v">0–1 / 0.50</td><td>Saturation and compression depth on drums and bass, and the ladder filter's resonance</td></tr>
+        <tr><td class="k">space</td><td class="v">0–1 / 0.10</td><td>Reverb and delay amount</td></tr>
+        <tr class="grp"><td colspan="3">motion</td></tr>
+        <tr><td class="k">glitch</td><td class="v">0–1 / 0.90</td><td>How often glitchy events (<code>glitch</code>, <code>reverse</code>) fire</td></tr>
+        <tr><td class="k">evolution</td><td class="v">0–1 / 0.90</td><td>Scene length (about 5 minutes at 0, about 2 at 1) and the chance of a phrase changing early at eight bars</td></tr>
+        <tr><td class="k">mutate</td><td class="v">0–1 / 0.80</td><td>Chance that the rhythm gets rewritten. Near 0, patterns repeat</td></tr>
+        <tr class="grp"><td colspan="3">tonality</td></tr>
+        <tr><td class="k">shift</td><td class="v">0–1 / 0.5</td><td>Parallel key shifts that keep the shape of everything — mostly sliding by thirds — plus whole-step lifts at the climax and a bass that lingers on the old root. At 0 the key only moves by fifths between scenes</td></tr>
+        <tr><td class="k">lush</td><td class="v">0–1 / 0.5</td><td>In the e.piano and strings circuits: tension-rich chords in open voicings with smooth voice leading, slash chords and inner voices moving by semitones</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">Touching a character, motion or tonality slider adds <code>(edit)</code> to the scene name, and dark-bright stops following the wave until the next scene begins, whether you pick it or it arrives on its own.
+      <code>reset all</code> returns every slider to its default and also clears the saved mixer levels and any solo / mute.</p>
+
+    <h3>mixer</h3>
+    <p>Set each sound from 0 to 200% (100% is normal). The levels are saved in this browser and come back next time.</p>
+    <div class="tw"><table>
+      <thead><tr><th>group</th><th>sliders</th></tr></thead>
+      <tbody>
+        <tr><td class="k">drums</td><td>kick, snare, clap, closed hat, open hat, cymbal, tom, rim, perc, cowbell</td></tr>
+        <tr><td class="k">bass</td><td>funk bass (in electro funk scenes), other bass (everywhere else)</td></tr>
+        <tr><td class="k">harmony</td><td>strings (sustained chords, arpeggio and high riff), chord chop, stab, e.piano, sequence (the 16th-note sequence)</td></tr>
+        <tr><td class="k">riff</td><td>riff synth (the body), riff bell (the FM bell), bell FM ratio (a ×0.5–2 multiplier on the bell's modulation ratio)</td></tr>
+        <tr><td class="k">texture</td><td>industrial noise</td></tr>
+      </tbody>
+    </table></div>
+    <p><kbd>S</kbd> solos a row and <kbd>M</kbd> mutes it. With anything soloed, only soloed sounds play; mute always wins over solo.
+      Silent rows are dimmed. Solo and mute are not saved.</p>
+
+    <h3>Keyboard and media keys</h3>
+    <ul>
+      <li><kbd>Space</kbd> — play / stop (when no slider has focus)</li>
+      <li>Lock screen and media keys — play, pause, next track (= next scene)</li>
+    </ul>
+  </section>
+
+  <section class="box">
+    <h2>Reading the monitor</h2>
+    <p>Next to the heading are <code>BPM</code> and <code>bar</code> (bars since the scene began). Below them: the output waveform, the 16 steps and the progress readout.</p>
+    <p><span class="key now"></span>current 16th
+      <span class="key on" style="margin-left:.8rem"></span>kick / snare / clap
+      <span class="key hat" style="margin-left:.8rem"></span>hats
+      <span class="key off" style="margin-left:.8rem"></span>rest</p>
+<pre class="mon">phrase <b>build → dash (break)</b> 5/16  (scene 57/64)  fill  loop
+event <i>filter sweep  @bar 48</i>
+dark-bright wave <b>0.62  41%  / 31min</b>
+key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal  noise 7/11</pre>
+    <dl class="mon">
+      <dt>phrase build → dash (break)</dt>
+      <dd>The current phrase. Once a switch is under way, the destination scene and the switching style follow the arrow</dd>
+      <dt>5/16  (scene 57/64)  fill  loop</dt>
+      <dd>Bar within the phrase and within the scene; <code>fill</code> or <code>dub</code> when this bar has one; <code>loop</code> while looping</dd>
+      <dt>event filter sweep  @bar 48</dt>
+      <dd>The last event and the bar it happened on, counted from when you pressed play</dd>
+      <dt>dark-bright wave 0.62  41%  / 31min</dt>
+      <dd>The dark-bright value the slow wave is asking for, how far through its cycle it is, and the cycle length</dd>
+      <dt>key A dorian +3</dt>
+      <dd>Tonic and scale. While <code>shift</code> has moved the key, the offset in semitones is shown</dd>
+      <dt>Cmaj9/D  [sustain lush chop + ep]</dt>
+      <dd>The current chord (with its bass note for slash chords) and the circuit playing it. <code>lush</code> means open voicings, <code>chop</code> means short chord stabs instead of sustained ones, <code>+ ep</code> means the e.piano is sitting in as a guest</dd>
+      <dt>bass 3 +phaser +pedal</dt>
+      <dd>Bass notes in this bar and what is applied: <code>+phaser</code> on sparse bars, <code>+wobble</code> a moving filter when the pitch stays put, <code>+vibrato</code> pitch wobble, <code>+pedal</code> a pedal note</dd>
+      <dt>noise 7/11</dt>
+      <dd>When industrial noise is playing, the cycle length on each side, in 16ths</dd>
+    </dl>
+  </section>
+
+  <section class="box">
+    <h2>Tips</h2>
+    <ul>
+      <li>To sit with one groove, turn <code>mutate</code> down. To hold a moment you like, use <code>loop bar</code></li>
+      <li>For faster development, raise <code>evolution</code>; lower it to linger</li>
+      <li>To pick the arrangement apart, solo sounds one at a time with <kbd>S</kbd></li>
+      <li>For a jazzier colour, raise <code>lush</code> in a jazz &amp; bossa or sustain scene. For bolder turns, raise <code>shift</code></li>
+      <li>Lost? <code>reset all</code></li>
+    </ul>
+  </section>
+
+  <section class="box">
+    <h2>Under the hood</h2>
+    <ul>
+      <li>All sound is synthesised with the Web Audio API. The drums follow TR-808 techniques, with four kits (deep / hard / warm / electro)</li>
+      <li>The bass is three pulse waves with moving pulse width plus a sub, saturated, then run through a ladder filter written as an AudioWorklet and a heavy compressor</li>
+      <li>Three harmony circuits: stab (short saw chords fed into the delay), strings (stacking sustained layers and arpeggios) and e.piano (a Rhodes-style FM voice through a Juno-style chorus)</li>
+      <li>The 16th-note sequence has its own ping-pong delay</li>
+      <li>The clock runs on the audio thread in an AudioWorklet, so playback keeps its footing when the tab is in the background or the screen is off</li>
+      <li>Mixer levels live in this browser's localStorage. Nothing is sent to any server</li>
+    </ul>
+    <p>The source code and design notes are on GitHub — <a href="https://github.com/mrmt/elevator-three">github.com/mrmt/elevator-three</a></p>
+  </section>
+</article>
+
+</main>
+
+<footer>Elevator Three — generative electro. <a href="index.html">open the instrument</a> · <a href="https://github.com/mrmt/elevator-three">GitHub</a> · <a href="../privacy/">Privacy</a></footer>
+
+</body>
+</html>
