@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>About — Elevator Three</title>
 <style>
-  /* 本体 (index.html) と同じ青紫とローズの配色、細い罫線で囲んだモジュール */
+  /* 本体 (index.html) と同じ青紫と淡いクリームの配色、細い罫線で囲んだモジュール */
   :root{
     /* 本体の index.html と配色を揃える */
     --bg:#7474b0;
@@ -15,7 +15,7 @@
     --ink:#ffffff;
     --body:#ffffff;
     --dim:#cfcfe8;
-    --accent:#db8d9b;
+    --accent:#ffffee;
     --hot:#313178;
     --glow:#ffffff;
     --white:#ffffff;
@@ -85,7 +85,7 @@
     content:counter(s);position:absolute;left:0;top:.15rem;
     width:1.6rem;height:1.6rem;display:flex;align-items:center;justify-content:center;
     font-family:var(--data);font-size:.8rem;color:var(--white);background:var(--hot);
-    box-shadow:0 0 10px rgba(219,141,155,.5);
+    box-shadow:0 0 10px rgba(255,255,238,.5);
   }
   ol.steps li strong{font-size:1.02rem}
   .playglyph{
@@ -120,8 +120,8 @@
   /* ステップ列の凡例。本体のキーと同じ色 */
   .key{display:inline-block;width:.95rem;height:.95rem;vertical-align:-.15em;border-radius:2px;border:1px solid rgba(207,207,232,.18);margin-right:.2rem}
   .key.now{background:var(--glow);border-color:var(--glow);box-shadow:0 0 6px rgba(207,207,232,.8)}
-  .key.on{background:var(--hot);border-color:rgba(219,141,155,.6)}
-  .key.hat{background:rgba(219,141,155,.28)}
+  .key.on{background:var(--hot);border-color:rgba(255,255,238,.6)}
+  .key.hat{background:rgba(255,255,238,.28)}
   .key.off{background:var(--box)}
 
   footer{

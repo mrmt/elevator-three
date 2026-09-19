@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ELEVATOR THREE</title>
 <style>
-  /* 青紫の筐体。白い文字とローズの操作部で読みやすくする */
+  /* 青紫の筐体。白い文字と淡いクリームの操作部で読みやすくする */
   :root{
     --bg:#7474b0;                    /* 地 */
     --box:#4e4e94;                   /* section・header・footer の地。地より濃くする */
@@ -17,7 +17,7 @@
     --line:rgba(207,207,232,.65);
     --ink:#ffffff;                   /* 文字 */
     --dim:#cfcfe8;
-    --accent:#db8d9b;                /* 見出しの帯、つまみ、選択中のもの */
+    --accent:#ffffee;                /* 見出しの帯、つまみ、選択中のもの */
     --hot:#313178;                   /* 押している状態の地。文字は白 */
     --glow:#ffffff;                  /* 点灯 (インジケーター、いま鳴っているステップ) */
     --white:#ffffff;
@@ -245,7 +245,7 @@
     background:var(--box);   /* 下のスライダーが透けて見えないよう濃くする */
     border:3px solid var(--accent);
     color:var(--accent);
-    box-shadow:0 0 0 0 rgba(219,141,155,.45);
+    box-shadow:0 0 0 0 rgba(255,255,238,.45);
     transition:background .18s,color .18s,transform .18s,box-shadow .6s;
     animation:bigpulse 2.6s ease-out infinite;
   }
@@ -255,15 +255,15 @@
     font-size:clamp(1rem,3.4vmin,1.7rem);letter-spacing:.32em;font-weight:700;white-space:nowrap;
     color:var(--accent);text-decoration:none;
     padding:.45em .5em .45em .82em;   /* 字間のぶん右が空くので、左を少し広く取って見た目の中央を揃える */
-    background:var(--box);border:1px solid rgba(219,141,155,.55);   /* 下の文字が透けないよう不透明にする */
+    background:var(--box);border:1px solid rgba(255,255,238,.55);   /* 下の文字が透けないよう不透明にする */
     transition:background .16s,color .16s;
   }
   #readme:hover,#readme:focus-visible{background:var(--hot);color:var(--white)}
   /* 気づいてもらうための呼吸。控えめに一度ずつ広がる */
   @keyframes bigpulse{
-    0%{box-shadow:0 0 0 0 rgba(219,141,155,.45)}
-    70%{box-shadow:0 0 0 18px rgba(219,141,155,0)}
-    100%{box-shadow:0 0 0 0 rgba(219,141,155,0)}
+    0%{box-shadow:0 0 0 0 rgba(255,255,238,.45)}
+    70%{box-shadow:0 0 0 18px rgba(255,255,238,0)}
+    100%{box-shadow:0 0 0 0 rgba(255,255,238,0)}
   }
   @media (prefers-reduced-motion:reduce){
     #bigplay{animation:none}
@@ -330,7 +330,7 @@
   .steps i{display:block;background:var(--line);height:22%;transition:background .1s,box-shadow .1s}
   .steps i.beat{height:44%}
   /* 何が鳴る位置かを高さと色で示す。on = キックやスネア、hat = ハット */
-  .steps i.hat{background:rgba(219,141,155,.45);height:34%}
+  .steps i.hat{background:rgba(255,255,238,.45);height:34%}
   .steps i.on{background:var(--hot);height:66%}
   .steps i.now{background:var(--glow);box-shadow:0 0 7px rgba(207,207,232,.7)}
   .seqhead{display:flex;justify-content:space-between;align-items:baseline;margin-top:1.4rem}
@@ -421,8 +421,8 @@
     height:18px !important;border-radius:2px;
     background:var(--box);border:1px solid rgba(207,207,232,.18);
   }
-  .steps i.hat{background:rgba(219,141,155,.28)}
-  .steps i.on{background:var(--hot);border-color:rgba(219,141,155,.6)}
+  .steps i.hat{background:rgba(255,255,238,.28)}
+  .steps i.on{background:var(--hot);border-color:rgba(255,255,238,.6)}
   .steps i.now{
     background:var(--glow);border-color:var(--glow);
     box-shadow:0 0 10px rgba(207,207,232,.8),inset 0 0 6px rgba(255,255,255,.5);
@@ -4461,7 +4461,7 @@ function draw(){
 
   // 拍の明滅。無音の段階でも拍が見えるようにしておく
   if(uiStep>=0 && uiStep%4===0){
-    g2.fillStyle=`rgba(219,141,155,${.05+ (uiStep===0?.05:0)})`;
+    g2.fillStyle=`rgba(255,255,238,${.05+ (uiStep===0?.05:0)})`;
     g2.fillRect(0,0,w,h);
   }
 }
