@@ -178,7 +178,7 @@
         数分ごとに曲調が移り変わり、同じ展開は二度と来ない。音量は <b>control</b> の <code>volume</code> で変える。
         スマートフォンでは、画面上部の <code>param</code> タブにある。</li>
     </ol>
-    <p class="note">音はすべてその場で合成していて、ネットワークには一切繋がらない。音が出ないときは、端末の音量と、ほかのタブが音を出していないかを確かめる。</p>
+    <p class="note">音はすべてその場で合成している。次のシーンや、どのイベントを起こすかといった判断だけは、中継のサーバーを通して Jev というモデルに問い合わせる。送るのはいまの曲の状態 (シーン名・調・直近の展開など) だけで、繋がらないときは手元の判断で鳴り続ける。<code>jev</code> を 0 にすると問い合わせない。音が出ないときは、端末の音量と、ほかのタブが音を出していないかを確かめる。</p>
   </section>
 
   <section class="box">
@@ -400,7 +400,7 @@ key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal 
         The music moves on to a new mood every few minutes and never repeats itself.
         Change the level with <code>volume</code> under <b>control</b> — on a phone, open the <code>param</code> tab first.</li>
     </ol>
-    <p class="note">Everything is synthesised on the spot and nothing is sent over the network. If you hear nothing, check your device volume and whether another tab is holding the audio.</p>
+    <p class="note">Everything is synthesised on the spot. Only the musical decisions — which scene comes next, which event fires — are asked of a model called Jev, through a relay server. What is sent is the state of the music (scene names, key, what happened recently) and nothing else; if the relay cannot be reached, the instrument keeps playing on its own decisions. Set <code>jev</code> to 0 and nothing is asked. If you hear nothing, check your device volume and whether another tab is holding the audio.</p>
   </section>
 
   <section class="box">
