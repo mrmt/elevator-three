@@ -136,6 +136,57 @@ test('リフは Jev が選んだ候補の旋律で鳴る', async ({ page }) => {
   await expect(page.locator('#jevlog')).toContainText(want);
 });
 
+test('行き先のシーンの音色は Jev の答えどおりになる (D-17)', async ({ page }) => {
+  test.setTimeout(90000);
+  const yes = { p: 1, confidence: 0.9 };
+  const seen = await fakeWorker(page, ({ kind, ask }) => {
+    if (kind === 'scene') return { mode: only(ask.mode, 'break') };
+    if (kind === 'harmony' && ask.prog) return { tight: yes, noise: yes, ...(ask.chop ? { chop: yes } : {}) };
+    return {};
+  });
+  await start(page, '?scenebars=16');
+  const first = await page.locator('#scenename').textContent();
+  await expect(page.locator('#scenename')).not.toHaveText(first, { timeout: 40000 });
+  const req = seen.find(b => b.kind === 'harmony' && b.ask.prog);
+  expect(req.ask.tight).toBe(true);
+  expect(req.ask.noise).toBe(true);
+  await expect(page.locator('#pchord')).toContainText('noise');
+  await expect(page.locator('#jevlog .o', { hasText: 'bass: tight (p=100%)' }).first()).toBeVisible();
+  await expect(page.locator('#jevlog .o', { hasText: 'industrial noise on (p=100%)' }).first()).toBeVisible();
+});
+
+test('リードの音色・キックの変形・並びの変異は Jev の答えどおりになる (D-17)', async ({ page }) => {
+  test.setTimeout(90000);
+  const seen = await fakeWorker(page, ({ kind, ask }) => kind !== 'phrase' ? {} : {
+    lead: only(ask.lead, 'square'),
+    mutate: { p: 1, confidence: 0.9 },
+    ...(ask.kick ? { kick: only(ask.kick, 'push') } : {}),
+  });
+  await start(page);
+  const out = t => page.locator('#jevlog .o', { hasText: t }).first();
+  await expect(out('lead timbre: square')).toBeVisible({ timeout: 40000 });
+  await expect(out(/pattern mutates at bar \d+/)).toBeVisible({ timeout: 40000 });
+  await expect(out('kick bends (push)')).toBeVisible({ timeout: 40000 });
+  // キックの変形は8小節の終わりに使うので、その3小節前の節目の回だけ聞く
+  for (const b of seen.filter(b => b.kind === 'phrase' && b.ask.kick)) expect((b.state.bar + 2) % 8).toBe(4);
+  // Jev が square 以外を選ぶことはない
+  await expect(page.locator('#jevlog .o', { hasText: /lead timbre: (sawtooth|triangle|pulse)/ })).toHaveCount(0);
+});
+
+test('平行移動の幅とペダルは Jev の答えどおりになる (D-17)', async ({ page }) => {
+  test.setTimeout(90000);
+  const seen = await fakeWorker(page, ({ kind, ask }) => kind === 'harmony' && ask.shift
+    ? { shift: { p: 1, confidence: 0.9 }, step: only(ask.step, '+5'), pedal: { p: 1, confidence: 0.9 } } : {});
+  await start(page);
+  await page.locator('#s_shift').fill('1');
+  const out = t => page.locator('#jevlog .o', { hasText: t }).first();
+  await expect(out('key shifts up a fourth')).toBeVisible({ timeout: 60000 });
+  await expect(out(/bass holds a pedal at bar \d+/)).toBeVisible({ timeout: 60000 });
+  const req = seen.find(b => b.kind === 'harmony' && b.ask.shift);
+  expect(req.ask.pedal).toBe(true);
+  expect(Object.keys(req.ask.step)).toContain('+5');
+});
+
 test('遅れて届いた答えは捨て、手元の判断で進む', async ({ page }) => {
   test.setTimeout(60000);
   // 4小節の節目より遅く返す。使われれば kick out が出るはず

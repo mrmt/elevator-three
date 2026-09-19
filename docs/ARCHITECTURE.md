@@ -421,7 +421,7 @@ MUTE されているか、どれかが SOLO でそれ以外なら 0、そうで�
 上りのゼロ交差を起点にするので、波形が横へ流れずその場で形が変わる。
 鳴っていないときは描かない。
 
-## Jev (D-3〜D-15)
+## Jev (D-3〜D-17)
 
 ```
 index.html                         worker/ (elevator-three-api)            TypeSafe
@@ -434,9 +434,13 @@ onBar(bar) ─ jevTake(name, tag) → jevChoice / jevRoll → 手元の判断 (t
 - 問い合わせは `onBar()` の末尾の `jevPlan()` と、`startTransition()` の `jevAskHarmony()`、
   `planSpark()` の `jevAskRiff()` から出る。予定は DESIGN.md の D-7
 - 使うのは `startTransition()` (行き先・方式・長さ)、`enterScene()` (キー・進行)、`nextPhrase()` (フレーズ型・lush)、
-  `maybeEvent()`、`planDub()`、平行移動の転調の判定、リフの差し替え (`jevAskRiff` の `onAnswer`)
+  `maybeEvent()`、`planDub()`、平行移動の転調の判定、リフの差し替え (`jevAskRiff` の `onAnswer`)。
+  D-17 で、`enterScene()` / `rollNoise()` (ベースの音色・コードの連打・ノイズ)、`nextPhrase()` (ep)、
+  `regenerate()` (リードの音色・並びの再抽選)、`buildBar()` (キックの変形)、平行移動の幅とペダルを足した
+- 毎小節引く判断のため、`onBar()` の頭で取り出した phrase / shift の答えを `jevHold` に次の答えまで持つ。
+  取り出すのは `jevHeld(name)`。`enterScene()` で捨てる (D-17)
 - `jevChoice()` は jev スライダーの割合で Jev の分布から引き、残りは `null` を返して呼び手に手元で引かせる。
-  `jevRoll()` は真偽の問いを引いて結果を返す (D-5 / D-15)
+  `jevRoll()` は真偽の問いを引いて結果を返す。p を変換する `map` を渡せる (mutate で小節あたりに直す) (D-5 / D-15 / D-17)
 - state は `jevState()`。いまの状態と、`histPush()` が積む出来事の履歴 `hist` を渡す (D-6)
 - `jev.status` は off / local / offline / on。3回続けて失敗したら `jev.pauseUntil` まで問い合わせない
 - 問い合わせるかどうか (`jevActive`) は目標値 `target.jev` で決める。滑らかに寄せる `current.jev` は 0 にならないので、それで決めるとスライダーを 0 にしても問い合わせが続く (D-12)

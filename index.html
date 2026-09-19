@@ -1554,8 +1554,10 @@ function makeNoiseGen(pan){
   if(!pat.some(Boolean)) pat[0]={vel:.7};
   return {len,pat,pan,count,eighth};
 }
-function rollNoise(group){
-  noiseOn = Math.random() < (NOISE_P[group]||0);
+// ans は遷移の途中で問い合わせた答え (D-17)。無ければ群ごとの確率で引く
+function rollNoise(group,ans=null){
+  noiseOn = jevRoll(ans,'noise',NOISE_P[group]||0);
+  jevRolled(noiseOn ? 'industrial noise on' : 'no industrial noise');
   if(!noiseOn){ noiseGens=[]; return; }
   // 7割は左右それぞれ独立した周期。3割はどちらか片側だけ
   noiseGens = Math.random()<.7
@@ -2367,6 +2369,7 @@ function enterScene(idx,{manual=false,keepKey=false}={}){
     shiftOff=0;
   }
   pedalUntilBar=-1;
+  jevHold={};         // 前のシーンへの答えは持ち越さない (D-17)
   reseedPattern();    // 並びも引き直す。前のシーンの模様を持ち越さない
   // 回路が変わるので和音の進行も選び直す。Jev の進行は、問い合わせたときに引いた lush の側から選ぶ
   const pk=jevChoice(ans,'prog');
@@ -2376,10 +2379,14 @@ function enterScene(idx,{manual=false,keepKey=false}={}){
     progPos=0; setChord();
   }else pickProg();
   // 陽と electro funk では刻む音になりやすく、陰では持続する音になりやすい
-  bassTight = Math.random() < .5;   // 持続する音色とタイトな音色を半々で引く (two:D-25)
-  rollNoise(SCENES[idx].group);     // インダストリアル・ノイズを出すかどうか (two:D-38)
-  // コード弾きを持続音にするか連打にするか (two:D-34)。出やすさはシーンごとに持つ
-  padChop = Math.random() < (SCENES[idx].chop||0);
+  // 音色の3つは Jev に聞いてあれば使う (D-17)
+  bassTight = jevRoll(ans,'tight',.5);   // 持続する音色とタイトな音色を半々で引く (two:D-25)
+  jevRolled(bassTight ? 'bass: tight' : 'bass: sustained');
+  rollNoise(SCENES[idx].group,ans);      // インダストリアル・ノイズを出すかどうか (two:D-38)
+  // コード弾きを持続音にするか連打にするか (two:D-34)。出やすさはシーンごとに持つ。0 のシーンでは連打にしない
+  const chopP=SCENES[idx].chop||0;
+  padChop = chopP>0 && jevRoll(ans,'chop',chopP);
+  if(chopP>0) jevRolled(padChop ? 'chords: chopped stabs' : 'chords: held pads');
   // リフのモチーフはシーンごとに引き直す (two:D-75)。跨いで残すと合図の役が薄れる
   sparkMotif=null; sparkAnswerAt=-1;
   chordAt=-999;       // 次の小節で必ず和音を組み直す
@@ -2445,7 +2452,9 @@ function nextPhrase(){
     pickProg({roll:false}); chordAt=-999;
   }
   // ジャズ / ボッサ回路は主役シーンだけでなく、他のシーンへも短く差し込む (two:D-9)
-  epGuest = circuit()!=='jazz' && phrase!=='break' && Math.random()<.18;
+  // Jev に聞いてあれば使う (D-17)
+  epGuest = circuit()!=='jazz' && phrase!=='break' && jevRoll(jevNow.phrase,'ep',.18);
+  if(circuit()!=='jazz' && phrase!=='break') jevRolled(epGuest ? 'guest electric piano sits in' : 'no guest electric piano');
   histPush('phrases',{phrase:p});
   showProgress();
 }
@@ -2665,7 +2674,9 @@ function buildBar(bar,scIdx,phr,seed,fillBar){
   if(dub){ k[4]=0; k[12]=0; }               // dub 局面は2拍ぶんだけ残す
   // 8小節の終わりでのみ変形する。それ以外の小節は素のまま
   const edge = (bar%8===7);
-  kickVariant = edge ? KICK_OPS[Math.floor(Math.random()*KICK_OPS.length)] : null;
+  // 変形の種類は Jev に聞いてあれば使う (D-17)。ミックスの2本目 (行き先のシーン) には使わない
+  kickVariant = !edge ? null
+    : (scIdx===sceneIdx && jevChoice(jevHeld('phrase'),'kick')) || KICK_OPS[Math.floor(Math.random()*KICK_OPS.length)];
   if(kickVariant) applyKickOp(k,kickVariant);
   if(quiet) k.fill(0);
   k[0]=quiet?0:Math.max(k[0],1);            // 小節頭は変異させない (ブレイク中を除く)
@@ -3345,13 +3356,16 @@ function placeDecorations(bar,fillBar){
 
 function regenerate(bar){
   // 変異 (two:D-7)。当たったときだけ種を引き直し、それまでは同じ並びを繰り返す
-  if(Math.random()<current.mutate*.5) reseedPattern();
+  // Jev の p は「この4小節のうちに変わる確率」なので、小節あたりに直して引く (D-17)
+  const mutated=jevRoll(jevHeld('phrase'),'mutate',current.mutate*.5,Math.min(1,current.mutate/.5),p=>1-Math.pow(1-p,1/4));
+  if(mutated){ reseedPattern(); jevRolled(`pattern mutates at bar ${bar}`); } else jev.roll=null;
   const fillBar=isFillBar(bar);
   curFillBar=fillBar;
   Object.assign(seq, buildBar(bar,sceneIdx,phrase,patSeed,fillBar));
   measureBass();
   // 音色はときどき差し替える。基本は鋸波で、たまに別の波形になる
-  if(Math.random()<.25) leadType = Math.random()<.5 ? 'sawtooth' : pick(LEAD_TYPES);
+  // いつ差し替えるかは手元で、何にするかは Jev に聞いてあれば使う (D-17)
+  if(Math.random()<.25) leadType = jevChoice(jevHeld('phrase'),'lead') || (Math.random()<.5 ? 'sawtooth' : pick(LEAD_TYPES));
   placeDecorations(bar,fillBar);
 }
 
@@ -3760,6 +3774,9 @@ function describeChoice(qid,k,e){
     case 'phrase': return `next phrase: ${PHRASE_LABEL[k]||k} at bar ${barCount}`;
     case 'event':  return k==='none' ? `no event at bar ${barCount}` : `event: ${EVENT_LABEL[k]||k} at bar ${barCount}`;
     case 'riff':   return `riff: ${desc||k}`;
+    case 'lead':   return `lead timbre: ${k} at bar ${barCount}`;
+    case 'kick':   return `kick bends (${k}) at bar ${barCount}`;
+    case 'step':   return k==='home' ? 'key returns home' : `key shifts ${desc||k}`;
     default:       return `${qid}: ${k}`;
   }
 }
@@ -3811,6 +3828,11 @@ function jevTake(name,tag){
   return null;
 }
 let jevNow={};   // この小節で使う応答。onBar() の頭で取り出す
+/* 次の答えが届くまで持っておく応答 (D-17)。毎小節引く判断 (lead / mutate / kick / pedal) が使う。
+   phrase は4小節、shift は8小節ごとに届く */
+let jevHold={};
+const JEV_HOLD_BARS={phrase:4, shift:8};
+const jevHeld=k=>{ const h=jevHold[k]; return h && barCount<h.until ? h.ans : null; };
 
 function sampleProbs(probs,allowed){
   const ks=Object.keys(probs).filter(k=>probs[k]>0 && allowed(k));
@@ -3839,10 +3861,10 @@ function jevChoice(ans,qid,allowed=()=>true,{always=false}={}){
 /* 真偽の問いを引く。jev スライダーの割合で Jev の確率、残りは手元の確率 localP で引き、結果を返す。
    gate は、スライダー (shift / lush) を 0 にしたら出さないという約束を Jev の側でも守るための倍率。
    引いた結果が音楽的に何を起こしたかは、呼び手が決めたあとに jevRolled() で書き足す */
-function jevRoll(ans,qid,localP,gate=1){
+function jevRoll(ans,qid,localP,gate=1,map=p=>p){
   const a=ans && ans[qid], has = !!a && typeof a.p==='number';
   const byJev = has && Math.random()<jevInfl();
-  const p = byJev ? clamp(a.p*gate) : localP;
+  const p = byJev ? map(clamp(a.p*gate)) : localP;
   if(byJev){ jev.used++; jev.last=`${qid} ${pct(p)}`; } else jev.local++;
   if(has && !byJev) jevOutcome(ans,`${qid}: decided by local rules`);
   jev.roll = byJev ? {ans, p} : null;
@@ -3884,6 +3906,21 @@ const MODE_DESC={
   mix:'A DJ-style blend: both drum tracks overlap for 16 bars',
   morph:'A continuous 16-bar morph of every parameter, no seam',
 };
+const LEAD_DESC={
+  sawtooth:'Sawtooth: bright and buzzy (the usual timbre)',
+  square:'Square: hollow and woody',
+  triangle:'Triangle: soft and flute-like',
+  pulse:'Narrow pulse: thin and nasal',
+};
+const KICK_DESC={
+  skip:'Drop the fourth beat',
+  push:'Anticipate the fourth beat by a 16th',
+  double:'Add an offbeat 8th before the fourth beat',
+  ghost:'Slip a quiet ghost kick in near the end of the bar',
+};
+// 平行移動の幅 (SHIFT_STEPS の各段)。home はずれを戻す
+const STEP_DESC={home:'back to the home key', '-4':'down a major third', '-3':'down a minor third', '-2':'down a whole tone',
+                 '+3':'up a minor third', '+4':'up a major third', '+5':'up a fourth', '+7':'up a fifth'};
 const LEN_DESC={short:'Shorter than usual (about 2 minutes)', medium:'The usual length (about 3 minutes)', long:'Longer than usual (about 4-5 minutes)'};
 const LEN_MUL={short:.7, medium:1, long:1.35};
 const KEY_STEP_DESC={0:'stay in the same key', 5:'up a fourth', 7:'up a fifth', 2:'up a whole tone',
@@ -3921,15 +3958,28 @@ function jevPlan(bar){
     if(phraseLen>BREAK_BARS && inPhrase>=8 && inPhrase%8===0){
       const w=SCENES[sceneIdx].w, ph={};
       for(const k of PHRASES) if((w[k]||0)>0) ph[k]=PHRASE_DESC[k];
-      if(Object.keys(ph).length>=2) ask.phrase=ph;
+      if(Object.keys(ph).length>=2){
+        ask.phrase=ph;
+        if(circuit()!=='jazz') ask.ep=true;   // 次のフレーズに ep を差し込むか (D-17)
+      }
     }
     if(at%8===0 && forcedDub===null) ask.dub=true;
+    // 次の答えまでの4小節で使う (D-17)。キックの変形は8小節の終わり (at+3) で使う
+    ask.lead=LEAD_DESC;
+    if(current.mutate>0) ask.mutate=true;
+    if(at%8===4) ask.kick=KICK_DESC;
     jevAsk('phrase','phrase',{tag:at, deadline:at, ask});
   }
   // 8小節の節目の2小節前。平行移動の転調と開いた和声
   if((at-phraseStartBar)%8===0 && pendingScene<0 && (current.shift>0 || current.lush>0)){
     const ask={};
-    if(current.shift>0) ask.shift=true;
+    if(current.shift>0){
+      ask.shift=true;
+      ask.pedal=true;   // 次の答えまでの8小節の和音の変わり目で使う (D-17)
+      const step={};
+      for(const [k,v] of Object.entries(STEP_DESC)) if(k!=='home' || shiftOff!==0) step[k]=v;
+      ask.step=step;
+    }
     if(current.lush>0 && (circuit()==='jazz' || circuit()==='sustain')) ask.lush=true;
     if(Object.keys(ask).length)
       jevAsk('shift','harmony',{tag:at, deadline:at, ask});
@@ -3946,7 +3996,9 @@ function jevAskHarmony(mode){
   list.forEach((pr,i)=>{
     prog['p'+i]=pr.map(([d,q,b])=>DEG_NAME[d]+' '+q+(b!=null?'/'+DEG_NAME[b]:'')).join(' - ');
   });
-  const ask={prog};
+  // 行き先のシーンの音色 (D-17)。連打が出ないシーンには聞かない
+  const ask={prog, tight:true, noise:true};
+  if(SCENES[pendingScene].chop>0) ask.chop=true;
   if(mode!=='morph'){
     const steps=[5,7,0,2].concat(current.shift>0 ? [3,9,4,8] : []);
     const key={};
@@ -3961,6 +4013,7 @@ function jevAskHarmony(mode){
 // フレーズとシーンを先に決めてから並びを引き直す (両者が並びの前提になるため)
 function onBar(bar,time){
   jevNow={phrase:jevTake('phrase',bar), shift:jevTake('shift',bar)};
+  for(const k in JEV_HOLD_BARS) if(jevNow[k]) jevHold[k]={ans:jevNow[k], until:bar+JEV_HOLD_BARS[k]};
   // ---- シーン遷移 (two:D-5 方式1: ブレイクを挟む) ----
   // 終わりの8小節をブレイクに充て、その間にキット・和音・編成・BPM を乗り換える
   if(pendingScene<0 && bar-sceneStartBar>=sceneBars-TRANSITION_BARS && (bar-phraseStartBar)%8===0){
@@ -3995,7 +4048,10 @@ function onBar(bar,time){
   // ずらしたら、進行の位置はそのままに和音を組み直す
   if(pendingScene<0 && bar>0 && (bar-phraseStartBar)%8===0){
     if(jevRoll(jevNow.shift,'shift',current.shift,Math.min(1,current.shift/.5))){
-      shiftOff = (shiftOff!==0 && Math.random()<.5) ? 0 : wrapShift(shiftOff+pick(SHIFT_STEPS));
+      // ずらす幅は Jev に聞いてあれば使う (D-17)
+      const st=jevChoice(jevNow.shift,'step',k=>k!=='home' || shiftOff!==0);
+      shiftOff = st!==null ? (st==='home' ? 0 : wrapShift(shiftOff+Number(st)))
+               : (shiftOff!==0 && Math.random()<.5) ? 0 : wrapShift(shiftOff+pick(SHIFT_STEPS));
       chordRevoice=true;
       histPush('keys',{key:keyName(tonic()), shift:true});
       jevRolled(`key shifts to ${keyName(tonic())} at bar ${bar}`);   // D-15
@@ -4006,7 +4062,11 @@ function onBar(bar,time){
     // シーンに入った直後は進行の1つ目から始める。そこで進めると頭を飛ばしてしまう
     if(chordAt>-900){
       // ペダル (two:D-65)。和音が変わっても、ベースだけ前の根音に1小節留める (two:D-67 で2から半分に)
-      if(Math.random()<current.shift*.5){ pedalPc=(tonic()+chordDeg)%12; pedalUntilBar=bar+1; }
+      // Jev に聞いてあれば使う (D-17)
+      if(jevRoll(jevHeld('shift'),'pedal',current.shift*.5,Math.min(1,current.shift/.5))){
+        pedalPc=(tonic()+chordDeg)%12; pedalUntilBar=bar+1;
+        jevRolled(`bass holds a pedal at bar ${bar}`);
+      }else jev.roll=null;
       progPos++;
     }
     setChord(); chordAt=bar;

@@ -34,6 +34,17 @@ export const KINDS = {
       'At this 8-bar boundary, the harmony should shift in parallel to a new tonal centre to lift the energy.' },
     lush: { type: 'noul', instructions: SET +
       'The keys and strings should use lush, tension-rich open voicings in the coming section.' },
+    step: { type: 'choice', instructions: SET +
+      'The harmony is about to shift in parallel. Choose how far the tonal centre should move (or return home) ' +
+      'so the key motion over the recent shifts feels purposeful rather than aimless.' },
+    pedal: { type: 'noul', instructions: SET +
+      'At each chord change in the coming 8 bars, the bass should hold the previous root for a bar as a pedal point.' },
+    tight: { type: 'noul', instructions: SET +
+      'In the next scene the bass should use a tight, short, plucked timbre rather than a sustained one.' },
+    chop: { type: 'noul', instructions: SET +
+      'In the next scene the chords should be played as rhythmic chopped stabs rather than held pads.' },
+    noise: { type: 'noul', instructions: SET +
+      'The next scene should carry a layer of industrial noise loops.' },
   },
   phrase: {
     phrase: { type: 'choice', instructions: SET +
@@ -43,6 +54,15 @@ export const KINDS = {
       'Surprises work best sparingly and after stable stretches.' },
     dub: { type: 'noul', instructions: SET +
       'The drums should drop out into a dub delay throw a few bars from now.' },
+    ep: { type: 'noul', instructions: SET +
+      'A guest electric piano from the jazz side should sit in on the next 16-bar phrase.' },
+    lead: { type: 'choice', instructions: SET +
+      'Choose the waveform the 16th-note lead sequence should switch to when it next changes timbre in the coming 4 bars.' },
+    mutate: { type: 'noul', instructions: SET +
+      'The drum and bass pattern should mutate into a new variation within the coming 4 bars, ' +
+      'rather than keep repeating the current one.' },
+    kick: { type: 'choice', instructions: SET +
+      'Choose how the four-on-the-floor kick should bend in the last bar of this 8-bar block to mark the boundary.' },
   },
   riff: {
     riff: { type: 'choice', instructions: SET +
