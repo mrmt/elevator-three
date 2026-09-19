@@ -203,7 +203,7 @@
     <p>14のシーンが4つの群に分かれて並ぶ。押すとそのシーンへすぐ切り替わる。放っておけば自動で次へ移る。</p>
     <h3>param 欄 (中央)</h3>
     <ul>
-      <li><b>control</b> — 曲全体の性格と進み方を決めるスライダー、<code>next</code> と <code>loop bar</code>、判断を Jev に任せる割合 <code>jev</code></li>
+      <li><b>control</b> — 曲全体の性格と進み方を決めるスライダー、<code>next</code> と <code>loop bar</code>、判断を Jev に任せる割合 <code>jev</code> と、Jev の確率に掛ける温度 <code>temperature</code></li>
       <li><b>mixer</b> — 音源ごとの音量と SOLO / MUTE</li>
     </ul>
     <h3>monitor 欄 (右)</h3>
@@ -309,7 +309,8 @@
         <tr><td class="k">shift</td><td class="v">0–1 / 0.8</td><td>形を保ったまま調を平行にずらす転調。3度の横滑りを主に、盛り上げでの全音上げ、ベースだけ前の音に留まるペダルも入る。0 なら五度圏の近い調へ移るだけ</td></tr>
         <tr><td class="k">lush</td><td class="v">0–1 / 0.8</td><td>e.piano と strings の回路で、テンションの多い和音を開いた配置で置き、声部を滑らかに運ぶ。分数コードや内声の半音の動きも入る</td></tr>
         <tr class="grp"><td colspan="3">decision</td></tr>
-        <tr><td class="k">jev</td><td class="v">0–1 / 1.0</td><td>次のシーン、フレーズ、仕掛け、dub、キー、リフの旋律といった判断のうち、Jev に任せる割合。0 にすると何も問い合わせず、Elevator Two と同じ判断で鳴る</td></tr>
+        <tr><td class="k">jev</td><td class="v">0–1 / 1.0</td><td>次のシーン、フレーズ、仕掛け、dub、キー、リフの旋律、音色といった判断のうち、Jev に任せる割合。0 にすると何も問い合わせず、Elevator Two と同じ判断で鳴る</td></tr>
+        <tr><td class="k">temperature</td><td class="v">0–2 / 1.0</td><td>Jev が返した確率に掛ける温度。1 でそのまま。下げるほど Jev のいちばんの答えに寄り、0 では必ずそれを取る。上げるほど答えが均され、意外な手が増える</td></tr>
       </tbody>
     </table></div>
     <p class="note">character / motion / tonality のスライダーを触ると、シーン名に <code>(edit)</code> が付き、dark-bright は波に戻されなくなる。
@@ -444,7 +445,7 @@ key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal 
     <p>Fourteen scenes in four groups. Tap one to switch to it straight away; otherwise the instrument moves on by itself.</p>
     <h3>param (middle)</h3>
     <ul>
-      <li><b>control</b> — sliders for the overall character and pacing, plus <code>next</code>, <code>loop bar</code> and <code>jev</code>, how much of the decision-making goes to Jev</li>
+      <li><b>control</b> — sliders for the overall character and pacing, plus <code>next</code>, <code>loop bar</code>, <code>jev</code> (how much of the decision-making goes to Jev) and <code>temperature</code> (how strictly Jev's favourite is followed)</li>
       <li><b>mixer</b> — levels for each sound, with solo and mute</li>
     </ul>
     <h3>monitor (right)</h3>
@@ -550,7 +551,8 @@ key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal 
         <tr><td class="k">shift</td><td class="v">0–1 / 0.8</td><td>Parallel key shifts that keep the shape of everything — mostly sliding by thirds — plus whole-step lifts at the climax and a bass that lingers on the old root. At 0 the key only moves by fifths between scenes</td></tr>
         <tr><td class="k">lush</td><td class="v">0–1 / 0.8</td><td>In the e.piano and strings circuits: tension-rich chords in open voicings with smooth voice leading, slash chords and inner voices moving by semitones</td></tr>
         <tr class="grp"><td colspan="3">decision</td></tr>
-        <tr><td class="k">jev</td><td class="v">0–1 / 1.0</td><td>How much of the decision-making — next scene, phrase, events, dub, key, riff melody — is handed to Jev. At 0 nothing is asked and it decides exactly like Elevator Two</td></tr>
+        <tr><td class="k">jev</td><td class="v">0–1 / 1.0</td><td>How much of the decision-making — next scene, phrase, events, dub, key, riff melody, timbres — is handed to Jev. At 0 nothing is asked and it decides exactly like Elevator Two</td></tr>
+        <tr><td class="k">temperature</td><td class="v">0–2 / 1.0</td><td>Temperature applied to Jev's probabilities. At 1 they are used as they are. Lower follows Jev's favourite more closely, and 0 always takes it; higher evens the choices out and lets more surprises through</td></tr>
       </tbody>
     </table></div>
     <p class="note">Touching a character, motion or tonality slider adds <code>(edit)</code> to the scene name, and dark-bright stops following the wave until the next scene begins, whether you pick it or it arrives on its own.
