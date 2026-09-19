@@ -5,18 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>自動で編曲し、演奏するブラウザ楽器</title>
 <style>
-:root{--bg:#3100a2;--panel:#2a008c;--panel2:#4c0099;--text:#f6eeff;--muted:rgba(216,178,255,.78);--line:rgba(216,178,255,.28);--accent:#b266ff;--accent2:#d8b2ff;--max:980px}
-*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:linear-gradient(180deg,#2a008c 0,#3100a2 35%,#2a008c 100%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;line-height:1.85}
+:root{--bg:#4e4e94;--panel:#4e4e94;--panel2:#313178;--text:#ffffff;--muted:#cfcfe8;--line:rgba(207,207,232,.28);--accent:#ffffee;--accent2:#cfcfe8;--max:980px}
+*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:linear-gradient(180deg,#4e4e94 0,#4e4e94 35%,#4e4e94 100%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;line-height:1.85}
 body:before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0,rgba(255,255,255,.018) 1px,transparent 1px,transparent 4px);opacity:.35}
-.hero{border-bottom:1px solid var(--line);padding:76px 24px 54px;background:radial-gradient(circle at 80% 10%,rgba(178,102,255,.22),transparent 32%),radial-gradient(circle at 15% 30%,rgba(69,0,226,.45),transparent 28%)}
+.hero{border-bottom:1px solid var(--line);padding:76px 24px 54px;background:radial-gradient(circle at 80% 10%,rgba(255,255,238,.22),transparent 32%),radial-gradient(circle at 15% 30%,rgba(49,49,120,.45),transparent 28%)}
 .hero-inner,main{max-width:var(--max);margin:auto} .eyebrow{font:700 12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.22em;color:var(--accent);text-transform:uppercase}
 h1{font-size:clamp(34px,6vw,68px);line-height:1.08;letter-spacing:-.045em;margin:.3em 0 .28em;max-width:900px} .subtitle{font-size:18px;color:var(--muted);max-width:760px}
 main{padding:48px 24px 96px} h2{font-size:30px;line-height:1.3;margin:2.4em 0 .7em;padding-top:.3em;border-top:1px solid var(--line)} h2:before{content:"// ";color:var(--accent);font-family:ui-monospace,monospace}
 h3{font-size:21px;margin:1.8em 0 .45em;color:#fff} p{margin:.85em 0} strong{color:#fff} a{color:var(--accent2)}
-blockquote{margin:1.6em 0;padding:20px 24px;border-left:3px solid var(--accent);background:rgba(178,102,255,.13);font-size:18px}
-pre{overflow:auto;background:#1c005e;border:1px solid var(--line);padding:22px;border-radius:8px;line-height:1.5;color:#e9d6ff;box-shadow:inset 0 0 28px rgba(216,178,255,.05)} code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
-p code,li code,td code{background:#4c0099;border:1px solid rgba(216,178,255,.3);border-radius:4px;padding:.12em .35em;color:#e9d6ff}
-ul,ol{padding-left:1.5em} li{margin:.38em 0} .tablewrap{overflow:auto;margin:1.4em 0} table{width:100%;border-collapse:collapse;background:var(--panel)} th,td{padding:12px 14px;border:1px solid var(--line);text-align:left;vertical-align:top} th{background:#4500e2;color:#d8b2ff;font-size:13px;letter-spacing:.04em}
+blockquote{margin:1.6em 0;padding:20px 24px;border-left:3px solid var(--accent);background:rgba(255,255,238,.13);font-size:18px}
+pre{overflow:auto;background:#313178;border:1px solid var(--line);padding:22px;border-radius:8px;line-height:1.5;color:#cfcfe8;box-shadow:inset 0 0 28px rgba(207,207,232,.05)} code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+p code,li code,td code{background:#313178;border:1px solid rgba(207,207,232,.3);border-radius:4px;padding:.12em .35em;color:#cfcfe8}
+ul,ol{padding-left:1.5em} li{margin:.38em 0} .tablewrap{overflow:auto;margin:1.4em 0} table{width:100%;border-collapse:collapse;background:var(--panel)} th,td{padding:12px 14px;border:1px solid var(--line);text-align:left;vertical-align:top} th{background:#313178;color:#cfcfe8;font-size:13px;letter-spacing:.04em}
 .footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;padding:28px 24px 50px} .footer div{max-width:var(--max);margin:auto}
 @media(max-width:640px){.hero{padding-top:48px} main{padding-top:28px} h2{font-size:25px}}
 @media print{body{background:white;color:#111} body:before{display:none} .hero{background:white} .subtitle,.footer{color:#555} h2{border-color:#ccc} pre{background:#f5f5f5;color:#111}}
@@ -61,7 +61,7 @@ Jev      : 残った候補に、いまの流れを踏まえた確率を付ける
 <h3>時間との折り合い</h3>
 <p>音の予約は、その小節が鳴るおよそ0.12秒前に確定する。問い合わせの往復 (実測で中央値230ms前後) を待つ余裕はない。そこで判断が要る場面の2〜16小節前に先回りして問い合わせ、答えを予約しておき、その場面が来たら使う。答えが間に合わなければ捨てて、elevator-two と同じ手元の判断で鳴らす。つまり、繋がらなくても音楽は止まらない。</p>
 <h3>任せる割合は人が決める</h3>
-<p><code>jev</code> スライダーは、判断のうち Jev に任せる割合である (既定 0.8)。0 にすれば何も問い合わせず、elevator-two と同じに鳴る。monitor には、Jev に何を問い、何が返り、そのうち何を使ったかが、その場で流れる。</p>
+<p><code>jev</code> スライダーは、判断のうち Jev に任せる割合である (既定 1.0)。0 にすれば何も問い合わせず、elevator-two と同じに鳴る。monitor には、Jev に何を問い、何が返り、そのうち何を使ったかが、その場で流れる。</p>
 <p>実際に鳴らしてみると、Jev は4小節の節目の仕掛けについて「何もしない」を5〜7割選ぶ。手元の規則より、仕掛けを控えめにする傾向がある。</p>
 <h2>4. 同時にいくつもの時間を見ている</h2>
 <p>elevator-three は、16分音符だけを見て次の音を決めているわけではない。異なる時間スケールの判断が重なっている。</p>
