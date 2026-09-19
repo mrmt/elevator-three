@@ -151,6 +151,20 @@ test('Worker に繋がらなくても進行は止まらない', async ({ page })
   expect(seen.length).toBe(n);
 });
 
+test('jev スライダーを 0 にすると問い合わせが止まる', async ({ page }) => {
+  test.setTimeout(40000);
+  const seen = await fakeWorker(page, () => ({}));
+  await start(page);
+  await expect.poll(() => seen.length, { timeout: 15000 }).toBeGreaterThan(0);
+  await page.locator('#s_jev').fill('0');
+  await expect(page.locator('#pjev')).toHaveText('off');
+  // 滑らかに寄せる値は 0 にならないので、目標値で止めていないとここで送り続ける
+  await page.waitForTimeout(1000);
+  const n = seen.length;
+  await page.waitForTimeout(10000);
+  expect(seen.length).toBe(n);
+});
+
 test('?jev=0 では問い合わせない', async ({ page }) => {
   test.setTimeout(30000);
   const seen = await fakeWorker(page, () => ({}));

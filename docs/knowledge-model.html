@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>elevator-two の音楽知識モデル</title>
+<style>
+:root{--bg:#090b0d;--panel:#11151a;--panel2:#171c22;--text:#e8edf2;--muted:#98a3ad;--line:#303841;--accent:#ffd400;--accent2:#8ce6ff;--max:980px}
+*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:linear-gradient(180deg,#07090b 0,#0d1115 35%,#090b0d 100%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;line-height:1.85}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0,rgba(255,255,255,.018) 1px,transparent 1px,transparent 4px);opacity:.35}
+.hero{border-bottom:1px solid var(--line);padding:76px 24px 54px;background:radial-gradient(circle at 80% 10%,rgba(255,212,0,.10),transparent 32%),radial-gradient(circle at 15% 30%,rgba(140,230,255,.08),transparent 28%)}
+.hero-inner,main{max-width:var(--max);margin:auto} .eyebrow{font:700 12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.22em;color:var(--accent);text-transform:uppercase}
+h1{font-size:clamp(34px,6vw,68px);line-height:1.08;letter-spacing:-.045em;margin:.3em 0 .28em;max-width:900px} .subtitle{font-size:18px;color:var(--muted);max-width:760px}
+main{padding:48px 24px 96px} h2{font-size:30px;line-height:1.3;margin:2.4em 0 .7em;padding-top:.3em;border-top:1px solid var(--line)} h2:before{content:"// ";color:var(--accent);font-family:ui-monospace,monospace}
+h3{font-size:21px;margin:1.8em 0 .45em;color:#fff} p{margin:.85em 0} strong{color:#fff} a{color:var(--accent2)}
+blockquote{margin:1.6em 0;padding:20px 24px;border-left:3px solid var(--accent);background:rgba(255,212,0,.055);font-size:18px}
+pre{overflow:auto;background:#050607;border:1px solid var(--line);padding:22px;border-radius:8px;line-height:1.5;color:#d7f6ff;box-shadow:inset 0 0 28px rgba(140,230,255,.03)} code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+p code,li code,td code{background:#171c22;border:1px solid #2b333c;border-radius:4px;padding:.12em .35em;color:#d7f6ff}
+ul,ol{padding-left:1.5em} li{margin:.38em 0} .tablewrap{overflow:auto;margin:1.4em 0} table{width:100%;border-collapse:collapse;background:var(--panel)} th,td{padding:12px 14px;border:1px solid var(--line);text-align:left;vertical-align:top} th{background:#181d22;color:var(--accent);font-size:13px;letter-spacing:.04em}
+.footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;padding:28px 24px 50px} .footer div{max-width:var(--max);margin:auto}
+@media(max-width:640px){.hero{padding-top:48px} main{padding-top:28px} h2{font-size:25px}}
+@media print{body{background:white;color:#111} body:before{display:none} .hero{background:white} .subtitle,.footer{color:#555} h2{border-color:#ccc} pre{background:#f5f5f5;color:#111}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="hero-inner"><div class="eyebrow">ELEVATOR-TWO / MUSIC SYSTEM NOTES</div><h1>elevator-two の音楽知識モデル</h1><div class="subtitle">知識・状態・記憶・制約・判断・演奏という観点から、自動演奏システムの内側を読み解く</div></div></header>
+<main><h2>はじめに ― コードの中にある「音楽知識」を分離して考える</h2>
+<p>elevator-two には、多数のアルゴリズム、確率、パラメータ、音源回路が存在する。しかし、それらを実装の集合としてだけ見ると、このシステムがなぜ音楽として成立するのかが見えにくい。</p>
+<p>そこで、現在の実装から一段抽象化し、elevator-two が持っているものを<strong>音楽知識モデル</strong>として整理する。</p>
+<p>ここでいう音楽知識とは、音楽理論だけではない。</p>
+<ul>
+<li>何を守るべきか</li>
+<li>何なら変えてよいか</li>
+<li>どの時間スケールで判断するか</li>
+<li>現在の状況をどう分類するか</li>
+<li>過去の演奏を何をどこまで覚えるか</li>
+<li>どんな条件なら何を鳴らすか</li>
+<li>いつ鳴らさないか</li>
+<li>どの変化なら「同じものの変奏」と聞こえるか</li>
+</ul>
+<p>までを含む。</p>
+<p>elevator-two は、この知識を使って<strong>状態を観察し、判断し、演奏行為へ変換するシステム</strong>と考えることができる。</p>
+<h2>1. 全体モデル</h2>
+<p>最も単純化すると、elevator-two は次の循環で動く。</p>
+<pre><code>            ┌───────────────┐
+            │   音楽知識     │
+            │ rules / taste │
+            └───────┬───────┘
+                    │
+                    ▼
+┌─────────┐   ┌───────────────┐   ┌─────────────┐
+│  記憶    │──▶│   現在の状態   │──▶│    判断      │
+│ memory  │   │ musical state │   │ decisions   │
+└────▲────┘   └───────────────┘   └──────┬──────┘
+     │                                    │
+     │                                    ▼
+     │                              ┌─────────────┐
+     └──────────────────────────────│   演奏行為   │
+                                    │ performance │
+                                    └─────────────┘</code></pre>
+<p>重要なのは、乱数はこの図の中心ではないことだ。</p>
+<p>乱数は<strong>判断の候補から一つを選ぶ道具</strong>であり、候補そのもの、選んでよい条件、選んではいけない条件は音楽知識によって決められる。</p>
+<h2>2. 知識は六種類に分けられる</h2>
+<p>現在のelevator-twoの知識は、概念的には六種類に整理できる。</p>
+<h3>2.1 不変条件 ― 守らなければ音楽の骨格が壊れるもの</h3>
+<p>例:</p>
+<ul>
+<li>基本の拍子感は4/4に置く</li>
+<li>キックは4つ打ちを基本とする</li>
+<li>小節頭のベースはルート</li>
+<li>コード外へ出ても調からは外れない</li>
+<li>パターンを毎小節引き直さない</li>
+<li>breakを長く続けない</li>
+<li>DJミックスでベースと和音を二重に重ねない</li>
+<li>リフの応答を無限に連鎖させない</li>
+</ul>
+<p>これらは「確率0.8」のような好みではなく、<strong>システムが音楽として自壊しないための境界</strong>である。</p>
+<h3>2.2 語彙 ― 選択できる音楽的な身振り</h3>
+<p>例:</p>
+<ul>
+<li>フレーズ: plateau / build / break / drop / dub-out</li>
+<li>リフのリズム: quarter / eighth / three / laid / push / syncope</li>
+<li>遷移: break / morph / DJ mix</li>
+<li>ハーモニー: stab / sustain / jazz</li>
+<li>ドラム変形: 抜き / 食い / double / ghost</li>
+<li>リフ変奏: 移調反復 / 反転 / 追加 / 削除 / rhythm variation</li>
+</ul>
+<p>elevator-two は無限の音楽を直接探索するのではなく、<strong>人間が音楽的だと認めた語彙の組み合わせ</strong>を探索している。</p>
+<h3>2.3 文脈依存規則 ― 同じ行為でも場面によって意味が変わる</h3>
+<p>例:</p>
+<ul>
+<li>buildではシーケンスのdelayを深くする</li>
+<li>明るいコードではベースをルート寄りにする</li>
+<li>音程が動かないベースではfilter variationを増やす</li>
+<li>ベース音符が少ない小節ではphaserを足す</li>
+<li>stab群ではリフを落ち着いた型へ寄せる</li>
+<li>funk群ではpushやthreeを好む</li>
+<li>break中にはspark riffを出さない</li>
+<li>dubの1小節ではdryを消すが、delay/reverb returnは残す</li>
+</ul>
+<p>この層があるため、パラメータ変更が単なる「値の変化」ではなく<strong>編曲上の意味</strong>を持つ。</p>
+<h3>2.4 確率的嗜好 ― 必須ではないが、その音楽らしさを作るもの</h3>
+<p>確率は「何でもあり」にするためではなく、複数の妥当な候補のどれを今回採るかに使われる。</p>
+<p>例:</p>
+<ul>
+<li>次のシーンは別群へ80%で渡る</li>
+<li>リフから35%で応答する</li>
+<li>リフ全体を30%で1オクターブ下げる</li>
+<li>フィルが35%で次小節へはみ出す</li>
+<li>industrial noiseの左右を70%で独立周期にする</li>
+</ul>
+<p>確率値は音楽的な<strong>癖</strong>として働く。</p>
+<h3>2.5 記憶 ― 過去との関係を作る知識</h3>
+<p>elevator-twoには複数の時間幅の記憶がある。</p>
+<ul>
+<li>直近に使ったシーン</li>
+<li>現在のpattern seed</li>
+<li>ベース旋律のseed</li>
+<li>偶数／奇数小節の2小節構造</li>
+<li>直前のspark motif</li>
+<li>motifの寿命</li>
+<li>呼びかけに対する予定された応答</li>
+<li>現在の陰陽波の位置</li>
+</ul>
+<p>これによって現在の演奏が、過去から独立した乱数列ではなくなる。</p>
+<p>特にspark motifは、絶対音程ではなく<strong>和音内の相対的な動き</strong>を記憶する。これは「音そのもの」ではなく「音楽的関係」を記憶している例である。</p>
+<h3>2.6 忘却 ― 同じ知識を永久に使わないための知識</h3>
+<p>記憶と同じくらい重要なのが忘却である。</p>
+<p>モチーフは2〜4回使えば引退する。シーンが変われば捨てる。直近のシーンは次の候補から避ける。</p>
+<p>これは、生成システムにとって重要な原則を示している。</p>
+<blockquote><strong>反復には記憶が必要だが、展開には忘却が必要である。</strong></blockquote>
+<h2>3. 状態モデル ― アプリは何を「現在」として認識しているか</h2>
+<p>elevator-two が判断に使う状態は、単一の変数ではない。</p>
+<pre><code>GLOBAL
+ ├─ 陰陽波の位置
+ ├─ BPM
+ ├─ key
+ └─ user controls
+
+SCENE
+ ├─ scene identity
+ ├─ group / circuit
+ ├─ kit
+ ├─ density / glitch tendencies
+ └─ scene age
+
+PHRASE
+ ├─ plateau / build / break / drop / dub-out
+ ├─ phrase position
+ └─ layer state
+
+BAR
+ ├─ bar number
+ ├─ fill?
+ ├─ dub?
+ ├─ event?
+ ├─ bass note count
+ └─ transition proximity
+
+MOTIF / PATTERN MEMORY
+ ├─ rhythm seed
+ ├─ bass seed
+ ├─ spark motif
+ ├─ motif life
+ └─ pending response</code></pre>
+<p>したがって、同じ16分位置でも、その瞬間の意味は状態によって変わる。</p>
+<p>「step 12だから音を鳴らす」のではなく、</p>
+<blockquote>「陽へ向かっている曙のbuild後半で、8小節の折り返しに近く、ベースは疎で、前の区間にsparkの呼びかけがあった」</blockquote>
+<p>という状態を背景に、実際の音が決まる。</p>
+<h2>4. 判断は時間階層ごとに分業される</h2>
+<p>音楽知識モデルとして見ると、elevator-twoは一つの巨大な判断器ではなく、<strong>異なる時間感覚を持つ複数のエージェント</strong>に近い。</p>
+<h3>4.1 Composer ― 長期構成</h3>
+<p>時間幅: 20〜40分〜数分</p>
+<p>判断:</p>
+<ul>
+<li>陰から陽へどう移るか</li>
+<li>次にどのscene familyへ行くか</li>
+<li>同じ場所に留まりすぎていないか</li>
+<li>BPMやkeyをどう乗り換えるか</li>
+</ul>
+<p>目的:</p>
+<p><strong>長く聴いたときに「大きな呼吸」を作る。</strong></p>
+<h3>4.2 Arranger ― フレーズ構成</h3>
+<p>時間幅: 8〜16小節</p>
+<p>判断:</p>
+<ul>
+<li>plateauを続けるか</li>
+<li>buildするか</li>
+<li>dropするか</li>
+<li>一瞬breakするか</li>
+<li>dub-outへ行くか</li>
+<li>layerを何枚出すか</li>
+</ul>
+<p>目的:</p>
+<p><strong>現在の素材を使って起伏を作る。</strong></p>
+<h3>4.3 Section editor ― 4〜8小節の句読点</h3>
+<p>判断:</p>
+<ul>
+<li>fillを入れるか</li>
+<li>filter sweepを入れるか</li>
+<li>kick/hatを抜くか</li>
+<li>glitchを入れるか</li>
+<li>spark riffを呼ぶか</li>
+<li>dubを起こすか</li>
+</ul>
+<p>目的:</p>
+<p><strong>長い反復の中に節目を聞かせる。</strong></p>
+<h3>4.4 Players ― 各楽器の演奏判断</h3>
+<p>各楽器は同じ生成方式を共有しない。</p>
+<ul>
+<li>drummerは拍の骨格を守る</li>
+<li>bassistは和声と音色の両方を演奏する</li>
+<li>harmony playersは回路ごとに異なる奏法を持つ</li>
+<li>sequencerは少数音を反復しながら空間を開く</li>
+<li>spark playerはモチーフを記憶し変奏する</li>
+<li>industrial layerは小節線から意図的に外れる</li>
+</ul>
+<p>目的:</p>
+<p><strong>楽器の役割に応じた自由を与える。</strong></p>
+<h3>4.5 Mixer / dub engineer ― 音響も編曲として扱う</h3>
+<p>判断:</p>
+<ul>
+<li>filterをどこまで開くか</li>
+<li>delay feedbackをいつ上げるか</li>
+<li>dryをいつ消すか</li>
+<li>phaserをいつ使うか</li>
+<li>resonanceを上げたとき量をどう補正するか</li>
+</ul>
+<p>目的:</p>
+<p><strong>音響操作を「後処理」ではなく演奏行為にする。</strong></p>
+<h2>5. 判断の基本形は「条件 → 候補 → 制約 → 重み → 行為」</h2>
+<p>多くの判断は、概念的には次の形に整理できる。</p>
+<pre><code>1. 現在の状態を読む
+2. 今回選べる候補を作る
+3. 音楽的に不適切な候補を除く
+4. 残った候補に文脈依存の重みを付ける
+5. 必要なら確率で一つ選ぶ
+6. 演奏行為へ変換する
+7. 必要な記憶を更新する</code></pre>
+<p>たとえば次のシーン選択なら、</p>
+<pre><code>陰陽波の現在位置
+      ↓
+近いシーンを候補化
+      ↓
+直近のシーンを除外
+      ↓
+別群を優先
+      ↓
+遷移可能性を確認
+      ↓
+scene決定
+      ↓
+break / morph / mix を決定</code></pre>
+<p>spark riffなら、</p>
+<pre><code>4小節区間の開始
+      ↓
+break中ではない?
+      ↓
+出現間隔を満たす?
+      ↓
+呼びかけか応答か?
+      ↓
+scene groupからrhythm profile
+      ↓
+新規motif or remembered motif
+      ↓
+variation
+      ↓
+register / timbre contour
+      ↓
+配置して演奏
+      ↓
+motif lifeを更新</code></pre>
+<p>この形は、将来新しい知識を追加するときの共通フレームとして使える。</p>
+<h2>6. 「音楽的制約」は生成能力を狭めるのではなく、意味を作る</h2>
+<p>elevator-twoでは制約が非常に多い。</p>
+<p>一見すると、生成AI的な自由度を下げているように見える。しかし実際には逆である。</p>
+<p>たとえば、</p>
+<ul>
+<li>キックを普段は崩さないから、崩した瞬間が意味を持つ</li>
+<li>breakを短くするから、休止が句読点になる</li>
+<li>motifをそのまま永久反復しないから、再登場が記憶として働く</li>
+<li>リフを常時鳴らさないから、登場が合図になる</li>
+<li>ベースの音程を増やさないから、filter movementが演奏として聞こえる</li>
+<li>DJ mixでdrumsだけを重ねるから、scene transitionが濁らない</li>
+</ul>
+<p>つまり制約は「できないこと」ではない。</p>
+<p><strong>差異を知覚可能にするための背景</strong>である。</p>
+<h2>7. 反復・変奏・対比・休止 ― 四つの基本操作</h2>
+<p>現在の実装を抽象化すると、elevator-twoの編曲は主に四つの操作からできている。</p>
+<h3>反復</h3>
+<p>pattern seed、bass seed、2小節単位の顔、持続するscene identity。</p>
+<p>聴き手に「いま何が鳴っているか」を覚えさせる。</p>
+<h3>変奏</h3>
+<p>mutate、fill、spark motif variation、filter wobble、octave displacement、rhythmic type。</p>
+<p>覚えたものを壊さず、新しさを与える。</p>
+<h3>対比</h3>
+<p>陰↔陽、stab↔sustain、暗いkit↔electro kit、plateau↔build/drop。</p>
+<p>局所的変化では作れない大きな違いを作る。</p>
+<h3>休止</h3>
+<p>break、kick/hat抜き、dub dry cut。</p>
+<p>音を追加せず、欠落によって構造を聞かせる。</p>
+<p>この四つを時間階層ごとに組み合わせることが、elevator-twoの編曲の基本文法といえる。</p>
+<h2>8. 音高・リズム・音色・空間を同格の演奏パラメータとして扱う</h2>
+<p>一般的な自動作曲では、音高とリズムを生成し、その後に音色を当てる構造になりやすい。</p>
+<p>elevator-twoでは、これは当てはまらない。</p>
+<p>ベースでは、音程が単純ならfilter movementが増える。spark riffでは、旋律と同時にcutoff、Q、decayのフレーズ内輪郭が決まる。dubでは、dryとdelay returnの関係そのものが1小節の演奏になる。buildでは、シーケンスのping-pong delayが深くなり、音像が広がる。</p>
+<p>したがって、elevator-twoの「ノート」は概念的には、</p>
+<pre><code>note =
+  pitch
++ onset
++ duration
++ velocity
++ timbre trajectory
++ spatial behavior
++ structural role</code></pre>
+<p>として扱ったほうが実態に近い。</p>
+<h2>9. 知識には「由来」と「確信度」がある</h2>
+<p>DESIGN.mdを見ると、多くの規則は最初から理論的に決められたものではない。</p>
+<p>「聴いた結果の指摘から」という記録が何度も現れる。</p>
+<p>たとえば、</p>
+<ul>
+<li>breakは16小節では長すぎた → 1小節へ</li>
+<li>ベース旋律が毎小節変わると落ち着かない → seedを保持</li>
+<li>デチューンだけではベースが薄い → PWMを導入</li>
+<li>持続和音が前に出すぎる → bus levelを下げる</li>
+<li>リフのミクロな揺らぎは耳に届かない → フレーズ単位の音色輪郭へ</li>
+<li>乱数を増やしても変奏にはならない → motif memoryを導入</li>
+</ul>
+<p>つまり、この知識ベースは「音楽理論集」ではなく、<strong>仮説 → 実装 → 試聴 → 修正</strong>で育った経験知である。</p>
+<p>将来このモデルを明示化するなら、各知識に次のメタデータを持たせる価値がある。</p>
+<pre><code>Knowledge Rule
+ ├─ statement      何を知っているか
+ ├─ scope          どの時間階層／楽器に効くか
+ ├─ condition      いつ適用するか
+ ├─ action         何をするか
+ ├─ invariant      絶対条件か
+ ├─ weight         嗜好ならどの程度か
+ ├─ memory         何を参照・更新するか
+ ├─ rationale      なぜそうするか
+ └─ evidence       試聴・実測・設計判断</code></pre>
+<p>これは、今後Claude Codeや別のAIと開発を続ける際にも有効である。</p>
+<h2>10. 現在の知識モデルの強み</h2>
+<h3>局所ランダムに陥らない</h3>
+<p>長期波、scene、phrase、bar、stepが分離されているため、16分音符の変化がそのまま曲全体の迷走にならない。</p>
+<h3>楽器の役割が保たれる</h3>
+<p>全トラックに同じ生成器を使わず、kick、hat、bass、harmony、riffがそれぞれ別の「常識」を持つ。</p>
+<h3>記憶がある</h3>
+<p>patternとmotifが過去を参照するため、「前に出たものが戻る」が成立する。</p>
+<h3>音響が作曲から分離していない</h3>
+<p>filter、delay、resonance、stereo imageまで構成要素になっている。</p>
+<h3>人間が介入できる</h3>
+<p>完全自律ではなく、陰陽、密度、evolution、mutate、scene selection、nextなどで、人間が高位の意図を与えられる。</p>
+<h2>11. 現在のモデルにまだ明示されていないもの</h2>
+<p>ここからは「現状に存在しない機能」の提案ではなく、<strong>現在の資料からは明示的なモデルとして確認できない領域</strong>を区別しておく。</p>
+<h3>聴覚的な自己評価</h3>
+<p>現在は「自分が今どのくらい混雑して聞こえているか」「直前の結果が良かったか」を音声解析して判断する仕組みは、資料上の中心モデルにはない。</p>
+<p>判断は主として内部状態とルールから行われる。</p>
+<h3>長期的な学習</h3>
+<p>試聴結果は人間との開発対話を通してDESIGN.mdとコードへ反映されてきたが、実行中のアプリ自身が「この演奏は良かった」と学習してルールを書き換えるわけではない。</p>
+<h3>意味的な曲想</h3>
+<p>陰陽やscene personalityはあるが、「悲しみ」「緊張から解放」「夜明け」といった物語意味を理解して作曲しているわけではない。名前は人間が与えた音楽的メタファーである。</p>
+<p>この境界を明確にしておくと、現在のシステムの強さを過大評価せずに済む。</p>
+<h2>12. 将来の開発で、このモデルをどう使えるか</h2>
+<p>新機能を「音を増やすIssue」として考える代わりに、次の問いを使える。</p>
+<ol>
+<li><strong>これはどの時間階層の知識か？</strong></li>
+<li><strong>どの状態を観察して判断するのか？</strong></li>
+<li><strong>守るべき不変条件は何か？</strong></li>
+<li><strong>候補となる音楽語彙は何か？</strong></li>
+<li><strong>確率に任せる部分と、規則で決める部分はどこか？</strong></li>
+<li><strong>過去の何を記憶する必要があるか？</strong></li>
+<li><strong>いつ忘れるべきか？</strong></li>
+<li><strong>結果は音高・リズム・音色・空間・休止のどこへ作用するか？</strong></li>
+<li><strong>人間の操作はこの判断へどう介入するか？</strong></li>
+<li><strong>試聴して何をもって成功と判断するか？</strong></li>
+</ol>
+<p>この10問に答えられれば、新しい仕掛けも既存の音楽システムへ自然に接続しやすい。</p>
+<h2>13. elevator-two の知識モデルを一文で表す</h2>
+<p>elevator-twoは、</p>
+<blockquote><strong>複数の時間階層にわたる音楽状態を保持し、楽器ごとの役割、不変条件、文脈依存規則、確率的嗜好、短期記憶と忘却を使って、反復・変奏・対比・休止をリアルタイムに編成する知識駆動型の自動演奏システム</strong></blockquote>
+<p>と捉えることができる。</p>
+<p>ここで最も重要なのは「自動」であることより、<strong>何を知っているから、その判断をしたのかを説明できる</strong>ことだ。</p>
+<p>elevator-two の現在の面白さは、ニューラルネットワークの内部に暗黙知を閉じ込めるのではなく、人間とAIの対話で得た音楽的判断を、かなりの部分まで明示的な規則としてコードに残している点にある。</p>
+<p>それは同時に、次にどんな音楽知識を教えるべきかを、人間が考え続けられる構造でもある。</p>
+<p>---</p>
+<h2>資料</h2>
+<ul>
+<li><code>DESIGN.md</code> — 設計判断 D-1〜D-82 と試聴・実測の履歴</li>
+<li><code>ARCHITECTURE.md</code> — 現行実装</li>
+<li><code>SCENES.md</code> — シーン人格の定義</li>
+</ul>
+<h3>原文から</h3>
+<blockquote>「一律の確率生成やマルコフ連鎖を全トラックに回さない。土台が崩れるかハットがベタになるかのどちらかに落ちるため。」<br>— <code>DESIGN.md</code>, D-7</blockquote>
+<blockquote>「並びを小節ごとに引き直すと、ミニマルに要る反復が出ず、毎小節ばらばらの模様になってしまう。」<br>— <code>DESIGN.md</code>, D-14</blockquote>
+<blockquote>「マンネリの逆は乱数の増量ではなく、主題とその変奏である。」<br>— <code>DESIGN.md</code>, D-75</blockquote>
+<blockquote>「定義が骨格を与え、その内側を自動生成が埋める。」<br>— <code>SCENES.md</code>, 冒頭</blockquote></main>
+<footer class="footer"><div>Based on DESIGN.md / ARCHITECTURE.md / SCENES.md — elevator-two, September 2026.</div></footer>
+</body></html>

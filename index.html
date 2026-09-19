@@ -3616,7 +3616,9 @@ const jev={status:JEV_OFF?'off':'local', ms:null, fails:0, pauseUntil:-1,
            used:0, local:0, last:'', book:{}, inflight:{}, nextLen:null, nextLush:false};
 const jevLog=(...a)=>{ if(JEV_LOG) console.log('[jev]',...a); };
 const jevInfl=()=>JEV_OFF ? 0 : current.jev;
-const jevActive=()=>!JEV_OFF && current.jev>0 && running && barCount>=jev.pauseUntil;
+/* 問い合わせるかどうかは目標値 (target) で決める。current は目標へ滑らかに寄せる値で、
+   0 に近づくだけで 0 にならないので、0 にしても問い合わせが続いてしまう (D-12) */
+const jevActive=()=>!JEV_OFF && target.jev>0 && running && barCount>=jev.pauseUntil;
 
 /* 出来事の記録。Jev に「いままで何が起きてきたか」を渡すため (D-6)。
    種類ごとに直近の8件だけを持つ */
@@ -4305,7 +4307,7 @@ function showProgress(){
     + (bassMod?' +vibrato':'')
     + (barCount<pedalUntilBar?' +pedal':'');
   // Jev (D-9)。状態と応答時間、Jev と手元で決めた数、直近に Jev が決めたこと
-  pJev.textContent = JEV_OFF || current.jev<=0 ? 'off' : jev.status+(jev.ms!=null ? ` ${jev.ms}ms` : '');
+  pJev.textContent = JEV_OFF || target.jev<=0 ? 'off' : jev.status+(jev.ms!=null ? ` ${jev.ms}ms` : '');
   pJevD.textContent = `${jev.used} jev / ${jev.local} local${jev.last ? '  '+jev.last : ''}`;
   pChord.textContent=`${NOTE_NAMES[(tonic()+chordDeg)%12]}${q}  [${CIRCUIT_LABEL[circuit()]}${lushOn?' lush':''}${mode}${epGuest?' + ep':''}]${bs}${nz}`;
 }
