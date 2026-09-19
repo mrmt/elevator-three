@@ -45,6 +45,13 @@ Worker の試験は `npm run test:worker`。
 
 ## 変更履歴
 
+### 未リリース
+
+**操作と見た目**
+- 配色を青紫の地、白い文字、淡いクリームの差し色にした。about と docs の解説 html も同じ (D-16)
+- 既定値を上げた。`shift` / `lush` を 0.8、`jev` を 1、mixer の `funk bass` / `other bass` を 0.5 (D-16)
+- jev 欄の JSON から `history` を外した。送る state には含む (D-16)
+
 ### v0.3 (2026-09-19)
 
 画面を3カラムにし、Jev とのやり取りを専用の欄に出すようにした。配色を紫にした。

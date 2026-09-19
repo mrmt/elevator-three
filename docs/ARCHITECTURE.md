@@ -366,9 +366,9 @@ lowpass の Q は dB なので、Q が 4 を超えたぶんだけ VCA を `RES_C
   35%の確率でレゾナンスを18まで上げて発振寸前まで持っていく (two:D-29)
 - **変異** — `mutate` が種を引き直す確率 (two:D-14)
 
-## 見た目 (two:D-37 / D-13)
+## 見た目 (two:D-37 / D-13 / D-16)
 
-EK の構造 (two:D-37) のまま、色を紫の5色にした (D-13)。テーマの切り替えは持たない。色はすべて `:root` の CSS 変数にある。
+EK の構造 (two:D-37) のまま、青紫の地に白い文字、淡いクリームの差し色にした (D-13 / D-16)。テーマの切り替えは持たない。色はすべて `:root` の CSS 変数にある。
 
 波形の線 (`--scope`) と地 (`--scope-bg`) も CSS 変数が持つ。
 毎フレーム `getComputedStyle` を呼ぶと重いので、起動時に `readLook()` が1度だけ拾う。
@@ -443,7 +443,7 @@ onBar(bar) ─ jevTake(name, tag) → jevChoice / jevRoll → 手元の判断 (t
 - JEV セクション (D-15): `jevAsk()` が1回ごとに `jevEntry()` で件を作り、送った `req` と返った `res` を持たせる。
   `jevChoice()` は `describeChoice()` で、真偽の問いは呼び手が `jevRolled()` で、音楽的に何が起こるかを `jevOutcome()` に書き足す。
   答えのオブジェクトから件を引くのに `WeakMap` (`ansEntry`) を使う。`renderJevLog()` が `#jevlog` に新しい順で20件まで描く。
-  JSON は `fmtJson()` で整形し、整形した文字列は件に取っておく
+  JSON は `fmtJson()` で整形し、整形した文字列は件に取っておく。`history` キーは表示から外す (送る state には含む、D-16)
 
 ## まだ無いもの
 

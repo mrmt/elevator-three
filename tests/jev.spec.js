@@ -64,10 +64,17 @@ test('イベントは Jev の答えどおりに起きる', async ({ page }) => {
   await expect(entry.locator('pre.q')).toContainText('"ask"');
   await expect(entry.locator('pre.r')).toContainText('"answers"');
   await expect(entry.locator('pre.r')).toContainText('"kickdrop":1');
-  // 色で読み分けられる。query はグレー、result は白、何が起こるかは強調
-  const colors = await entry.evaluate(e => ['pre.q', 'pre.r', '.o'].map(s => getComputedStyle(e.querySelector(s)).color));
-  expect(colors[1]).toBe('rgb(255, 255, 255)');
-  expect(new Set(colors).size).toBe(3);
+  // 読み分けられる。query はグレー、result は白、何が起こるかは太字と帯で強調 (D-16)
+  const look = await entry.evaluate(e => ['pre.q', 'pre.r', '.o'].map(s => {
+    const c = getComputedStyle(e.querySelector(s));
+    return { color: c.color, bg: c.backgroundColor, weight: c.fontWeight };
+  }));
+  const [q, r, o] = look;
+  expect(r.color).toBe('rgb(255, 255, 255)');
+  expect(q.color).not.toBe(r.color);
+  expect(o.bg).toBe('rgb(49, 49, 120)');   // --hot の帯
+  expect(o.bg).not.toBe(r.bg);
+  expect(Number(o.weight)).toBeGreaterThanOrEqual(700);
   const req = seen.find(b => b.kind === 'phrase');
   // 質問文は送らない。選択肢と state だけ
   expect(Object.keys(req.ask.event)).toContain('none');
