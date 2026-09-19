@@ -28,19 +28,33 @@ test('陰陽のスライダーは手で動かすと波に戻されない', async
 test('狭い画面ではタブで切り替わる', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'デスクトップ幅ではタブを出さない');
   await expect(page.locator('#tabs')).toBeVisible();
-  await expect(page.locator('.tab')).toHaveCount(2);
+  // scene / param / monitor の3つ (D-14)
+  await expect(page.locator('.tab')).toHaveCount(3);
   await page.locator('.tab[data-tab="scene"]').click();
   await expect(page.locator('#tab-scene')).toBeVisible();
   await expect(page.locator('#tab-mix')).toBeHidden();
+  await expect(page.locator('#tab-mon')).toBeHidden();
   await page.locator('.tab[data-tab="param"]').click();
   await expect(page.locator('#tab-mix')).toBeVisible();
+  await expect(page.locator('#tab-mon')).toBeHidden();
+  await page.locator('.tab[data-tab="monitor"]').click();
+  await expect(page.locator('#tab-mon')).toBeVisible();
+  await expect(page.locator('#monitor')).toBeVisible();
+  await expect(page.locator('#jev')).toBeVisible();
+  await expect(page.locator('#tab-mix')).toBeHidden();
 });
 
-test('広い画面では2セクションが同時に見える', async ({ page, isMobile }) => {
+test('広い画面では3カラムが同時に見える', async ({ page, isMobile }) => {
+  // D-14。左 scene、中央 control と mixer、右 monitor と JEV
   test.skip(isMobile, '狭幅ではタブ表示になる');
   await expect(page.locator('#tabs')).toBeHidden();
-  await expect(page.locator('#tab-scene')).toBeVisible();
-  await expect(page.locator('#tab-mix')).toBeVisible();
+  const cols = [];
+  for (const id of ['tab-scene', 'tab-mix', 'tab-mon']) {
+    await expect(page.locator('#' + id)).toBeVisible();
+    cols.push(await page.locator('#' + id).boundingBox());
+  }
+  expect(cols[1].x).toBeGreaterThan(cols[0].x);
+  expect(cols[2].x).toBeGreaterThan(cols[1].x);
   // 右カラム (音作り) は廃止した (two:D-54)
   await expect(page.locator('#tab-sound')).toHaveCount(0);
 });
@@ -78,9 +92,9 @@ test('見た目は EK 固定で、切り替えは無い', async ({ page }) => {
   // two:D-37。テーマの切り替えは廃止した (2026-09-12)
   await expect(page.locator('.themebtn')).toHaveCount(0);
   expect(await page.getAttribute('html', 'data-theme')).toBeNull();
-  // EK の漆黒の下地が既定で当たっている
+  // 紫の5色 (D-13)。地は #3100a2
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  expect(bg).toBe('rgb(8, 8, 10)');
+  expect(bg).toBe('rgb(49, 0, 162)');
 });
 
 test('UI は英語だけで、言語の切り替えは無い', async ({ page }) => {
@@ -133,11 +147,13 @@ test('大きな再生ボタンと READ ME FIRST が画面の中央に出る', as
   expect(b.width).toBeGreaterThan(90);
 });
 
-test('卓は control / monitor / mixer の3群', async ({ page, isMobile }) => {
-  // two:D-57 / two:D-61
+test('卓は control / mixer、右カラムは monitor / jev', async ({ page, isMobile }) => {
+  // two:D-57 / two:D-61 / D-14
   if (isMobile) await page.locator('.tab[data-tab="param"]').click();
   await expect(page.locator('#mixer .mixgrp > .mixhead > span:first-child'))
-    .toHaveText(['control', 'monitor', 'mixer']);
+    .toHaveText(['control', 'mixer']);
+  await expect(page.locator('#tab-mon .mixgrp > .mixhead > span:first-child'))
+    .toHaveText(['monitor', 'jev']);
   await expect(page.locator('#s_mix_strings')).toHaveCount(1);
   await expect(page.locator('#s_mix_sustain')).toHaveCount(0);
 });
@@ -186,19 +202,19 @@ test('mixer の音量には SOLO と MUTE がある', async ({ page, isMobile })
 
 test('YouTube と大きな読み出しは無く、進行の表示は monitor にある', async ({ page, isMobile }) => {
   // two:D-60 / two:D-61
-  if (isMobile) await page.locator('.tab[data-tab="param"]').click();
+  if (isMobile) await page.locator('.tab[data-tab="monitor"]').click();
   for (const id of ['bg', 'bgvideo', 'ytkey', 'vcap', 'ryy', 'rd']) {
     await expect(page.locator('#' + id)).toHaveCount(0);
   }
   for (const id of ['rbpm', 'rbar', 'cv', 'steps', 'pphrase', 'pevent', 'pwave', 'pchord']) {
     await expect(page.locator(`#monitor #${id}`)).toHaveCount(1);
   }
-  // 広い画面では control の右に並ぶ
+  // 広い画面では右カラムにあり、control より右 (D-14)
+  await expect(page.locator('#tab-mon #monitor')).toHaveCount(1);
   if (!isMobile) {
     const c = await page.locator('#grp-control').boundingBox();
     const m = await page.locator('#monitor').boundingBox();
     expect(m.x).toBeGreaterThan(c.x + c.width - 1);
-    expect(Math.abs(m.y - c.y)).toBeLessThan(2);
   }
 });
 
@@ -260,7 +276,7 @@ test('タイトルの左に、上の階層へのアイコンのリンクがあ�
   await expect(link).toHaveAttribute('target', '_blank');
   await expect(link.locator('svg path')).toHaveCount(3);
   await expect(link).toBeVisible();
-  expect(await link.evaluate(el => getComputedStyle(el).color)).toBe('rgb(244, 244, 238)');
+  expect(await link.evaluate(el => getComputedStyle(el).color)).toBe('rgb(216, 178, 255)');   // --ink (D-13)
   // タイトルより左にある
   const icon = await link.boundingBox();
   const title = await page.locator('header .mark').boundingBox();
@@ -274,5 +290,5 @@ test('about ページへのリンクがある', async ({ page, isMobile }) => {
   await expect(link).toHaveAttribute('target', '_blank');
   await expect(link).toBeVisible();
   // 切り替えのタブには数えない
-  if (isMobile) await expect(page.locator('#tabs .tab')).toHaveCount(2);
+  if (isMobile) await expect(page.locator('#tabs .tab')).toHaveCount(3);
 });

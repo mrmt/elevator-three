@@ -5,7 +5,7 @@
 TypeSafe の [Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev) に文脈つきで任せて、
 展開と即興を豊かにすることを目指す。
 
-**最新版: v0.2** — 変更点は下の[変更履歴](#変更履歴)を参照。
+**最新版: v0.3** — 変更点は下の[変更履歴](#変更履歴)を参照。
 
 `index.html` をブラウザで開き、卓の中央にある大きな再生ボタンを押すと鳴りはじめる。
 ブラウザの制限で、開いただけでは音は出ない。音と操作は two v0.6 を引き継いでいる。
@@ -44,6 +44,20 @@ npx wrangler deploy                        # three-api.elevator-noise.com
 Worker の試験は `npm run test:worker`。
 
 ## 変更履歴
+
+### v0.3 (2026-09-19)
+
+画面を3カラムにし、Jev とのやり取りを専用の欄に出すようにした。配色を紫にした。
+
+**操作と見た目**
+- 3カラムにした。左は scene、中央は control と mixer、右は monitor と jev。狭い画面のタブは scene / param / monitor (D-14)
+- jev 欄に、Jev とのやり取りを新しい順に出す。送った query の JSON (グレー)、返った result の JSON (白)、
+  その結果音楽的に何が起こるか (強調)。やり取りが増えても、伸びるのは jev 欄の中だけ (D-15)
+- 配色を #d8b2ff / #b266ff / #4500e2 / #3100a2 / #4c0099 の5色にした。about と docs の解説 html も同じ (D-13)
+
+**開発**
+- 真偽の問いの `jevP()` を、引いた結果を返す `jevRoll()` にした (D-15)
+- 試験を足した。やり取りが20回を超えても mixer と jev 欄の位置と大きさが変わらないこと、3色が読み分けられること
 
 ### v0.2 (2026-09-19)
 

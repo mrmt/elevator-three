@@ -366,29 +366,35 @@ lowpass の Q は dB なので、Q が 4 を超えたぶんだけ VCA を `RES_C
   35%の確率でレゾナンスを18まで上げて発振寸前まで持っていく (two:D-29)
 - **変異** — `mutate` が種を引き直す確率 (two:D-14)
 
-## 見た目 (two:D-37)
+## 見た目 (two:D-37 / D-13)
 
-EK (ダーク & サイバネティクス) 固定。テーマの切り替えは廃止した (2026-09-12)。
+EK の構造 (two:D-37) のまま、色を紫の5色にした (D-13)。テーマの切り替えは持たない。色はすべて `:root` の CSS 変数にある。
 
-波形の色 (`--scope`) は CSS 変数が持つ。
+波形の線 (`--scope`) と地 (`--scope-bg`) も CSS 変数が持つ。
 毎フレーム `getComputedStyle` を呼ぶと重いので、起動時に `readLook()` が1度だけ拾う。
 この関数は `scopeColorCache` の宣言より前に置かれているので、呼び出しは初期化の列から行う。
+`draw()` は宣言の直後に最初の1回を呼ぶので、`scopeColorCache` / `scopeBgCache` の宣言は `draw()` より前に置く。
 
 ## スライダー卓と個別の音量 (two:D-54)
 
-中央の `#console` の中で `#mixer` がスクロールし、群を上から並べる。
-上段の `.ctlrow` に control と monitor が横に並び (狭いと折り返す)、下段が mixer。
-`#bigplay` は卓の中央の最前面にある。
+画面は3カラム (D-14)。左 `#tab-scene`、中央 `#tab-mix`、右 `#tab-mon`。狭い画面ではタブ `scene` / `param` / `monitor` で1つずつ出す。
 
-**monitor (two:D-61)** — `#rbpm` / `#rbar` (見出しの右)、波形の帯 `#cv`、ステップ列 `#steps`、
-進行の表示 (`#pphrase` ほか) を持つ HTML の箱。control の群は本体がその前へ差し込む。
+中央の `#console` の中で `#mixer` がスクロールし、群を上から並べる。
+上段の `.ctlrow` に control、下段が mixer。
+`#bigplay` は画面全体の中央の最前面にある。
+
+**monitor (two:D-61)** — 右カラムの上。`#rbpm` / `#rbar` (見出しの右)、波形の帯 `#cv`、ステップ列 `#steps`、
+進行の表示 (`#pphrase` ほか) を持つ HTML の箱。
+
+**JEV (D-15)** — 右カラムの下。残りの高さを取り、ログ `#jevlog` はその中だけでスクロールする。
+見出しの右に `#pjev` (状態と応答時間) と `#pjevd` (Jev と手元で決めた数)。
 
 **next と loop bar (two:D-62)** — HTML ではシーン欄に置いてあり、本体が control の master 列の下 (小見出し `scene`) へ移す。
 点滅は `showProgress()` がまとめて付け外しする。シーン名は乗り換え前の小節の間、next は押してから乗り換わるまで (`nextPending`)、loop bar は有効な間 (two:D-63)。
 点滅は視差効果を減らす設定でも止めない。
 `#pbarpos` の末尾には、いまの小節の装飾 (`dub` / `fill`) が出る。
 
-群は control (master / character / motion / tonality / decision)・mixer (drums / bass / harmony / riff / texture) の2つと monitor (two:D-57 / two:D-61)。
+群は control (master / character / motion / tonality / decision)・mixer (drums / bass / harmony / riff / texture) の2つと、右カラムの monitor / jev (two:D-57 / two:D-61 / D-14)。
 decision 群の `jev` は判断を Jev に任せる割合 (D-5)。雰囲気の操作ではないので、動かしてもシーン名に (edit) を付けない (D-10)。
 `mixGroup()` が群を、`mixSub()` が群の中の小見出し付きの列を作る。
 `reset all` は、`addSlider()` が登録簿 `sliders` に積んだ既定値へ全部戻し、保存した個別の音量を消す。
@@ -415,14 +421,14 @@ MUTE されているか、どれかが SOLO でそれ以外なら 0、そうで�
 上りのゼロ交差を起点にするので、波形が横へ流れずその場で形が変わる。
 鳴っていないときは描かない。
 
-## Jev (D-3〜D-12)
+## Jev (D-3〜D-15)
 
 ```
 index.html                         worker/ (elevator-three-api)            TypeSafe
 jevPlan(bar) ─ jevAsk() ─ POST /decide {kind,state,ask} ─ parseRequest ─ POST /v1/systemone
                                                         └ buildQuestions (質問文は KINDS から)
 jev.book[name] ← {tag, answers} ── {answers:{id:{probs|p}}} ── pickAnswers ──┘
-onBar(bar) ─ jevTake(name, tag) → jevChoice / jevP → 手元の判断 (two と同じ) に戻ることもある
+onBar(bar) ─ jevTake(name, tag) → jevChoice / jevRoll → 手元の判断 (two と同じ) に戻ることもある
 ```
 
 - 問い合わせは `onBar()` の末尾の `jevPlan()` と、`startTransition()` の `jevAskHarmony()`、
@@ -430,12 +436,14 @@ onBar(bar) ─ jevTake(name, tag) → jevChoice / jevP → 手元の判断 (two 
 - 使うのは `startTransition()` (行き先・方式・長さ)、`enterScene()` (キー・進行)、`nextPhrase()` (フレーズ型・lush)、
   `maybeEvent()`、`planDub()`、平行移動の転調の判定、リフの差し替え (`jevAskRiff` の `onAnswer`)
 - `jevChoice()` は jev スライダーの割合で Jev の分布から引き、残りは `null` を返して呼び手に手元で引かせる。
-  `jevP()` は真偽の問いの確率を返す (D-5)
+  `jevRoll()` は真偽の問いを引いて結果を返す (D-5 / D-15)
 - state は `jevState()`。いまの状態と、`histPush()` が積む出来事の履歴 `hist` を渡す (D-6)
 - `jev.status` は off / local / offline / on。3回続けて失敗したら `jev.pauseUntil` まで問い合わせない
 - 問い合わせるかどうか (`jevActive`) は目標値 `target.jev` で決める。滑らかに寄せる `current.jev` は 0 にならないので、それで決めるとスライダーを 0 にしても問い合わせが続く (D-12)
-- やり取りのログ (D-11): `jevAsk()` が1回ごとに `jevEntry()` で件を作り、`jevChoice()` / `jevP()` が使ったものを `jevUsed()` で書き足す。
-  答えのオブジェクトから件を引くのに `WeakMap` (`ansEntry`) を使う。`renderJevLog()` が monitor の `#jevlog` に新しい順で5件まで描く
+- JEV セクション (D-15): `jevAsk()` が1回ごとに `jevEntry()` で件を作り、送った `req` と返った `res` を持たせる。
+  `jevChoice()` は `describeChoice()` で、真偽の問いは呼び手が `jevRolled()` で、音楽的に何が起こるかを `jevOutcome()` に書き足す。
+  答えのオブジェクトから件を引くのに `WeakMap` (`ansEntry`) を使う。`renderJevLog()` が `#jevlog` に新しい順で20件まで描く。
+  JSON は `fmtJson()` で整形し、整形した文字列は件に取っておく
 
 ## まだ無いもの
 

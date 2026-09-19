@@ -7,14 +7,18 @@
 <style>
   /* 本体 (index.html) の EK の見た目を踏襲する。漆黒の筐体に黄色のアクセント、細い罫線で囲んだモジュール */
   :root{
-    --bg:#08080A;
-    --box:#0B0B0D;
-    --panel:rgba(255,255,255,.045);
-    --line:rgba(255,255,255,.16);
-    --ink:#F4F4EE;
-    --body:rgba(244,244,238,.84);
-    --dim:rgba(244,244,238,.5);
-    --amber:#FFE20A;
+    /* 紫の5色 (D-13)。本体の index.html と揃える */
+    --bg:#3100a2;
+    --box:#2a008c;
+    --panel:rgba(76,0,153,.55);
+    --line:rgba(216,178,255,.26);
+    --ink:#d8b2ff;
+    --body:rgba(216,178,255,.9);
+    --dim:rgba(216,178,255,.6);
+    --accent:#b266ff;
+    --hot:#4500e2;
+    --glow:#d8b2ff;
+    --white:#ffffff;
     --disp:'Helvetica Neue','Arial Narrow','Hiragino Sans','Hiragino Kaku Gothic ProN',sans-serif;
     --data:'Menlo','Monaco',monospace;
   }
@@ -25,8 +29,8 @@
     -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.8;
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
-  a{color:var(--amber)}
-  :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  a{color:var(--accent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
   /* ---- ヘッダー (本体と同じ並び) ---- */
   header{
@@ -44,9 +48,9 @@
     padding:.42rem .9rem;font-size:.64rem;letter-spacing:.24em;text-transform:uppercase;line-height:1.4;white-space:nowrap;
     transition:border-color .16s,color .16s,background .16s;
   }
-  .tbtn:hover{border-color:var(--amber);color:var(--amber)}
-  .tbtn.play{background:var(--amber);border-color:var(--amber);color:#08080A}
-  .tbtn.play:hover{color:#08080A;filter:brightness(1.08)}
+  .tbtn:hover{border-color:var(--accent);color:var(--accent)}
+  .tbtn.play{background:var(--hot);border-color:var(--hot);color:var(--white)}
+  .tbtn.play:hover{color:var(--white);filter:brightness(1.15)}
   .tbtn .short{display:none}
 
   /* ---- 本文 ---- */
@@ -59,7 +63,7 @@
   section.box{border:1px solid var(--line);background:var(--box);padding:1rem 1.1rem 1.15rem;margin-top:1rem}
   h2{
     display:block;font-size:.66rem;letter-spacing:.26em;text-transform:uppercase;font-weight:700;line-height:1.6;
-    border:1px solid var(--line);border-left:3px solid var(--amber);padding:.22rem .5rem;margin-bottom:.85rem;
+    border:1px solid var(--line);border-left:3px solid var(--accent);padding:.22rem .5rem;margin-bottom:.85rem;
   }
   h3{
     font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);font-weight:400;
@@ -70,24 +74,24 @@
   ul{margin:.45rem 0 .2rem 1.1rem}
   li + li{margin-top:.2rem}
   b,strong{color:var(--ink);font-weight:600}
-  code,kbd{font-family:var(--data);font-size:.82em;color:var(--amber);white-space:nowrap}
+  code,kbd{font-family:var(--data);font-size:.82em;color:var(--accent);white-space:nowrap}
   kbd{border:1px solid var(--line);padding:.02rem .35rem;background:var(--panel)}
 
   /* すぐに鳴らす。本体のステップキーのような番号を付ける */
-  .quick{border-left:3px solid var(--amber)}
+  .quick{border-left:3px solid var(--accent)}
   ol.steps{list-style:none;counter-reset:s;margin:.2rem 0 .4rem}
   ol.steps li{counter-increment:s;position:relative;padding-left:2.4rem;margin-top:.7rem}
   ol.steps li::before{
     content:counter(s);position:absolute;left:0;top:.15rem;
     width:1.6rem;height:1.6rem;display:flex;align-items:center;justify-content:center;
-    font-family:var(--data);font-size:.8rem;color:#08080A;background:var(--amber);
-    box-shadow:0 0 10px rgba(255,226,10,.45);
+    font-family:var(--data);font-size:.8rem;color:var(--white);background:var(--hot);
+    box-shadow:0 0 10px rgba(178,102,255,.5);
   }
   ol.steps li strong{font-size:1.02rem}
   .playglyph{
     display:inline-flex;align-items:center;justify-content:center;vertical-align:-.3em;
-    width:1.5rem;height:1.5rem;border:2px solid var(--amber);border-radius:50%;
-    color:var(--amber);font-size:.62rem;padding-left:.12rem;margin:0 .15rem;
+    width:1.5rem;height:1.5rem;border:2px solid var(--accent);border-radius:50%;
+    color:var(--accent);font-size:.62rem;padding-left:.12rem;margin:0 .15rem;
   }
   .note{font-size:.85rem;color:var(--dim);margin-top:.8rem}
 
@@ -97,28 +101,28 @@
   th,td{text-align:left;vertical-align:top;padding:.42rem .5rem;border-bottom:1px solid var(--line)}
   th{font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:400;white-space:nowrap}
   td.k{font-family:var(--data);font-size:.8rem;color:var(--ink);white-space:nowrap}
-  td.v{font-family:var(--data);font-size:.74rem;color:var(--amber);white-space:nowrap}
+  td.v{font-family:var(--data);font-size:.74rem;color:var(--accent);white-space:nowrap}
   tr.grp td{
-    font-size:.56rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(214,226,232,.45);
+    font-size:.56rem;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);
     padding-top:.9rem;border-bottom:none;
   }
 
   /* monitor の表示例 */
   pre.mon{
     font-family:var(--data);font-size:.72rem;line-height:1.75;color:var(--dim);
-    border:1px solid var(--line);background:#050506;padding:.6rem .75rem;margin:.5rem 0 .3rem;overflow-x:auto;
+    border:1px solid var(--line);background:#1c005e;padding:.6rem .75rem;margin:.5rem 0 .3rem;overflow-x:auto;
   }
   pre.mon b{color:var(--ink);font-weight:400}
-  pre.mon i{font-style:normal;color:var(--amber)}
+  pre.mon i{font-style:normal;color:var(--accent)}
   dl.mon dt{font-family:var(--data);font-size:.78rem;color:var(--ink);margin-top:.6rem}
   dl.mon dd{color:var(--body);margin-left:1rem}
 
   /* ステップ列の凡例。本体のキーと同じ色 */
-  .key{display:inline-block;width:.95rem;height:.95rem;vertical-align:-.15em;border-radius:2px;border:1px solid rgba(255,255,255,.13);margin-right:.2rem}
-  .key.now{background:var(--amber);border-color:var(--amber);box-shadow:0 0 6px rgba(255,226,10,.7)}
-  .key.on{background:#2A2A16;border-color:rgba(255,226,10,.4)}
-  .key.hat{background:#1D2226}
-  .key.off{background:#141416}
+  .key{display:inline-block;width:.95rem;height:.95rem;vertical-align:-.15em;border-radius:2px;border:1px solid rgba(216,178,255,.18);margin-right:.2rem}
+  .key.now{background:var(--glow);border-color:var(--glow);box-shadow:0 0 6px rgba(216,178,255,.8)}
+  .key.on{background:var(--hot);border-color:rgba(178,102,255,.6)}
+  .key.hat{background:rgba(178,102,255,.28)}
+  .key.off{background:var(--box)}
 
   footer{
     max-width:46rem;margin:0 auto;padding:1.2rem 1.2rem 2.4rem;
@@ -197,13 +201,17 @@
       シーンが変わる直前の1小節は、<b>シーン名が点滅</b>する。</p>
     <h3>scene 欄</h3>
     <p>14のシーンが4つの群に分かれて並ぶ。押すとそのシーンへすぐ切り替わる。放っておけば自動で次へ移る。</p>
-    <h3>param 欄</h3>
+    <h3>param 欄 (中央)</h3>
     <ul>
-      <li><b>control</b> — 曲全体の性格と進み方を決めるスライダー、<code>next</code> と <code>loop bar</code></li>
-      <li><b>monitor</b> — BPM、小節、出力の波形、16ステップ、いま何が起きているかの表示</li>
+      <li><b>control</b> — 曲全体の性格と進み方を決めるスライダー、<code>next</code> と <code>loop bar</code>、判断を Jev に任せる割合 <code>jev</code></li>
       <li><b>mixer</b> — 音源ごとの音量と SOLO / MUTE</li>
     </ul>
-    <p>画面が狭いときは、上部の <code>scene</code> / <code>param</code> タブで切り替える。</p>
+    <h3>monitor 欄 (右)</h3>
+    <ul>
+      <li><b>monitor</b> — BPM、小節、出力の波形、16ステップ、いま何が起きているかの表示</li>
+      <li><b>jev</b> — Jev とのやり取り。何を問い、何が返り、その結果音楽的に何が起こるか</li>
+    </ul>
+    <p>画面が狭いときは、上部の <code>scene</code> / <code>param</code> / <code>monitor</code> タブで切り替える。</p>
   </section>
 
   <section class="box">
@@ -300,6 +308,8 @@
         <tr class="grp"><td colspan="3">tonality</td></tr>
         <tr><td class="k">shift</td><td class="v">0–1 / 0.5</td><td>形を保ったまま調を平行にずらす転調。3度の横滑りを主に、盛り上げでの全音上げ、ベースだけ前の音に留まるペダルも入る。0 なら五度圏の近い調へ移るだけ</td></tr>
         <tr><td class="k">lush</td><td class="v">0–1 / 0.5</td><td>e.piano と strings の回路で、テンションの多い和音を開いた配置で置き、声部を滑らかに運ぶ。分数コードや内声の半音の動きも入る</td></tr>
+        <tr class="grp"><td colspan="3">decision</td></tr>
+        <tr><td class="k">jev</td><td class="v">0–1 / 0.8</td><td>次のシーン、フレーズ、仕掛け、dub、キー、リフの旋律といった判断のうち、Jev に任せる割合。0 にすると何も問い合わせず、Elevator Two と同じ判断で鳴る</td></tr>
       </tbody>
     </table></div>
     <p class="note">character / motion / tonality のスライダーを触ると、シーン名に <code>(edit)</code> が付き、dark-bright は波に戻されなくなる。
@@ -356,6 +366,19 @@ key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal 
       <dt>noise 7/11</dt>
       <dd>インダストリアル・ノイズが鳴っているとき、左右それぞれの周期 (16分の数)</dd>
     </dl>
+  </section>
+
+  <section class="box">
+    <h2>jev の読み方</h2>
+    <p>見出しの右に、Jev との繋がり (<code>on</code> / <code>offline</code> / <code>off</code>) と応答時間、Jev と手元の規則で決めた数が出る。
+      その下に、Jev とのやり取りが1回ずつ、新しいものから並ぶ。1件は4つの部分からなる。</p>
+    <ul>
+      <li>小さな行 — 問い合わせた小節、何の判断か、どの小節で使う答えか</li>
+      <li><b>グレー</b> — Jev に送った問い (JSON)。いまの曲の状態、ここ数分の出来事、選択肢</li>
+      <li><b>白</b> — Jev から返った答え (JSON)。選択肢ごとの確率</li>
+      <li><b>強調</b> — その答えから、音楽的に何が起こるか。たとえば <code>event: filter sweep at bar 20</code>、<code>next scene: gear (electro funk)</code>、<code>key shifts to C# dorian</code></li>
+    </ul>
+    <p>答えが間に合わなかったときや、<code>jev</code> の割合で手元の規則に回したときは、そのことが強調の行に出る。</p>
   </section>
 
   <section class="box">
@@ -419,13 +442,17 @@ key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal 
       During the last bar before a scene change, <b>the scene name blinks</b>.</p>
     <h3>scene</h3>
     <p>Fourteen scenes in four groups. Tap one to switch to it straight away; otherwise the instrument moves on by itself.</p>
-    <h3>param</h3>
+    <h3>param (middle)</h3>
     <ul>
-      <li><b>control</b> — sliders for the overall character and pacing, plus <code>next</code> and <code>loop bar</code></li>
-      <li><b>monitor</b> — BPM, bar, the output waveform, the 16 steps and a readout of what is happening</li>
+      <li><b>control</b> — sliders for the overall character and pacing, plus <code>next</code>, <code>loop bar</code> and <code>jev</code>, how much of the decision-making goes to Jev</li>
       <li><b>mixer</b> — levels for each sound, with solo and mute</li>
     </ul>
-    <p>On narrow screens, switch between them with the <code>scene</code> / <code>param</code> tabs at the top.</p>
+    <h3>monitor (right)</h3>
+    <ul>
+      <li><b>monitor</b> — BPM, bar, the output waveform, the 16 steps and a readout of what is happening</li>
+      <li><b>jev</b> — the exchanges with Jev: what was asked, what came back, and what it does to the music</li>
+    </ul>
+    <p>On narrow screens, switch between them with the <code>scene</code> / <code>param</code> / <code>monitor</code> tabs at the top.</p>
   </section>
 
   <section class="box">
@@ -522,6 +549,8 @@ key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal 
         <tr class="grp"><td colspan="3">tonality</td></tr>
         <tr><td class="k">shift</td><td class="v">0–1 / 0.5</td><td>Parallel key shifts that keep the shape of everything — mostly sliding by thirds — plus whole-step lifts at the climax and a bass that lingers on the old root. At 0 the key only moves by fifths between scenes</td></tr>
         <tr><td class="k">lush</td><td class="v">0–1 / 0.5</td><td>In the e.piano and strings circuits: tension-rich chords in open voicings with smooth voice leading, slash chords and inner voices moving by semitones</td></tr>
+        <tr class="grp"><td colspan="3">decision</td></tr>
+        <tr><td class="k">jev</td><td class="v">0–1 / 0.8</td><td>How much of the decision-making — next scene, phrase, events, dub, key, riff melody — is handed to Jev. At 0 nothing is asked and it decides exactly like Elevator Two</td></tr>
       </tbody>
     </table></div>
     <p class="note">Touching a character, motion or tonality slider adds <code>(edit)</code> to the scene name, and dark-bright stops following the wave until the next scene begins, whether you pick it or it arrives on its own.
@@ -578,6 +607,19 @@ key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal 
       <dt>noise 7/11</dt>
       <dd>When industrial noise is playing, the cycle length on each side, in 16ths</dd>
     </dl>
+  </section>
+
+  <section class="box">
+    <h2>Reading jev</h2>
+    <p>Next to the heading: the link to Jev (<code>on</code> / <code>offline</code> / <code>off</code>), the response time, and how many decisions Jev and the local rules have made.
+      Below it, each exchange with Jev, newest first, in four parts:</p>
+    <ul>
+      <li>A small line — the bar it was asked in, which decision, and the bar the answer is for</li>
+      <li><b>Grey</b> — what was sent to Jev (JSON): the current state of the music, what happened in the last few minutes, and the choices</li>
+      <li><b>White</b> — what Jev sent back (JSON): a probability for each choice</li>
+      <li><b>Highlighted</b> — what that answer does to the music, such as <code>event: filter sweep at bar 20</code>, <code>next scene: gear (electro funk)</code> or <code>key shifts to C# dorian</code></li>
+    </ul>
+    <p>If the answer came too late, or the <code>jev</code> slider left the decision to the local rules, the highlighted line says so.</p>
   </section>
 
   <section class="box">

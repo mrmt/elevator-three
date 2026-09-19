@@ -55,11 +55,19 @@ test('イベントは Jev の答えどおりに起きる', async ({ page }) => {
   await expect(page.locator('#pevent')).toContainText('kick out', { timeout: 30000 });
   await expect(page.locator('#pjev')).toContainText('on');
   await expect(page.locator('#pjevd')).toContainText('event kickdrop 100%');
-  // monitor のログ (D-11)。問い・答え・使ったものが並ぶ
-  const log = page.locator('#jevlog');
-  await expect(log).toContainText(/bar \d+ phrase → by \d+\s+event\(10\)/);
-  await expect(log).toContainText('event kickdrop 100%');
-  await expect(log).toContainText('used  event kickdrop');
+  // JEV セクション (D-15)。送った query (グレー)、返った result (白)、音楽的に何が起こるか (強調)
+  const entry = page.locator('#jevlog .e').filter({ has: page.locator('.o', { hasText: 'event: kick out' }) }).first();
+  await expect(entry).toBeVisible();
+  await expect(entry.locator('.m').first()).toContainText(/bar \d+ · phrase · for bar \d+/);
+  await expect(entry.locator('pre.q')).toContainText('"kind": "phrase"');
+  await expect(entry.locator('pre.q')).toContainText('"state"');
+  await expect(entry.locator('pre.q')).toContainText('"ask"');
+  await expect(entry.locator('pre.r')).toContainText('"answers"');
+  await expect(entry.locator('pre.r')).toContainText('"kickdrop":1');
+  // 色で読み分けられる。query はグレー、result は白、何が起こるかは強調
+  const colors = await entry.evaluate(e => ['pre.q', 'pre.r', '.o'].map(s => getComputedStyle(e.querySelector(s)).color));
+  expect(colors[1]).toBe('rgb(255, 255, 255)');
+  expect(new Set(colors).size).toBe(3);
   const req = seen.find(b => b.kind === 'phrase');
   // 質問文は送らない。選択肢と state だけ
   expect(Object.keys(req.ask.event)).toContain('none');
@@ -173,4 +181,32 @@ test('?jev=0 では問い合わせない', async ({ page }) => {
   expect(seen.length).toBe(0);
   await expect(page.locator('#pjev')).toHaveText('off');
   await expect(page.locator('#jevlog')).toHaveText('jev off — nothing is asked');
+});
+
+test('Jev とのやり取りが増えても、mixer と JEV の位置と大きさは変わらない', async ({ page }) => {
+  // D-14 / D-15。以前は monitor の下にログを積んでいて、やり取りのたびに mixer が押し下げられた
+  test.setTimeout(120000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const seen = await fakeWorker(page, ({ kind, ask }) =>
+    kind === 'phrase' ? { event: only(ask.event, 'sweep') } : {});
+  await start(page, '?spark&sparkmotif=0');
+  const box = async () => ({
+    mixer: await page.locator('#grp-mixer').boundingBox(),
+    jev: await page.locator('#jev').boundingBox(),
+    scroll: await page.evaluate(() => [document.documentElement.scrollHeight, innerHeight]),
+  });
+  await expect.poll(() => seen.length, { timeout: 15000 }).toBeGreaterThan(1);
+  const b0 = await box();
+  /* 欄からあふれるのに十分な件数まで待つ。実時間で鳴らすので、並列で走らせると問い合わせの間隔が伸びる。
+     21件を待つと負荷しだいで上限に届かないので、13件で見る (件数の上限 20 は下で確かめる) */
+  await expect.poll(() => seen.length, { timeout: 80000 }).toBeGreaterThan(12);
+  const n = await page.locator('#jevlog .e').count();
+  expect(n).toBeGreaterThan(12);
+  expect(n).toBeLessThanOrEqual(20);
+  const b1 = await box();
+  expect(b1.mixer).toEqual(b0.mixer);
+  expect(b1.jev).toEqual(b0.jev);
+  expect(b1.scroll[0]).toBeLessThanOrEqual(b1.scroll[1]);
+  const overflow = await page.locator('#jevlog').evaluate(e => e.scrollHeight > e.clientHeight);
+  expect(overflow).toBe(true);
 });
