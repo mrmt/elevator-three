@@ -114,9 +114,9 @@ test('リフは Jev が選んだ候補の旋律で鳴る', async ({ page }) => {
   page.on('console', m => { const t = m.text(); if (t.startsWith('[jev] riff played')) played.push(t.slice(18)); });
   // 覚えた形の使い回しを切り、毎回新しく引かせる
   await start(page, '?spark&sparkmotif=0&jevlog');
-  await expect.poll(() => played.length, { timeout: 30000 }).toBeGreaterThan(0);
-  expect(want).not.toBeNull();
-  expect(played).toContain(want);
+  /* Jev が選んだ旋律が鳴るまで待つ。jev スライダーは 1 へ滑らかに寄る途中なので、
+     最初のリフは手元で選ばれることがある (その回は Jev に問い合わせない) */
+  await expect.poll(() => want !== null && played.includes(want), { timeout: 30000 }).toBe(true);
   // ログには選んだ候補の旋律まで出す
   await expect(page.locator('#jevlog')).toContainText(want);
 });
