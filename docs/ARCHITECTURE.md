@@ -444,7 +444,8 @@ onBar(bar) ─ jevTake(name, tag) → jevChoice / jevRoll → 手元の判断 (t
 - `jevChoice()` は jev スライダーの割合で Jev の分布から引き、残りは `null` を返して呼び手に手元で引かせる。
   `jevRoll()` は真偽の問いを引いて結果を返す。p を変換する `map` を渡せる (mutate で小節あたりに直す) (D-5 / D-15 / D-17)
 - 温度 (D-18): `sampleProbs()` は `tempProbs()`、`jevRoll()` は `tempP()` で Jev の確率に `target.temp` を掛けてから引く。API には温度が無いので手元で掛ける
-- state は `jevState()`。いまの状態と、`histPush()` が積む出来事の履歴 `hist` を渡す (D-6)
+- state は `jevState()`。いまの状態と、`histPush()` が積む出来事の履歴を渡す (D-6)。
+  履歴は `narrateHistory()` が1本の英文 `story` に畳む。件数は `histTotal` に残す (D-21)
 - `jev.status` は off / local / offline / on。3回続けて失敗したら `jev.pauseUntil` まで問い合わせない
 - 問い合わせるかどうか (`jevActive`) は目標値 `target.jev` で決める。滑らかに寄せる `current.jev` は 0 にならないので、それで決めるとスライダーを 0 にしても問い合わせが続く (D-12)
 - JEV セクション (D-15): `jevAsk()` が1回ごとに `jevEntry()` で件を作り、送った `req` と返った `res` を持たせる。
@@ -452,7 +453,7 @@ onBar(bar) ─ jevTake(name, tag) → jevChoice / jevRoll → 手元の判断 (t
   Jev が決めたことは `decisions` に積み、`renderDecisions()` が DECISION の `#declog` に新しい順で40件まで描く。
   手元の規則に回したこと (`jevOutcome(…, false)`) は件の `out` に積み、JEV に出す (D-19)
   答えのオブジェクトから件を引くのに `WeakMap` (`ansEntry`) を使う。`renderJevLog()` が `#jevlog` に新しい順で20件まで描く。
-  JSON は `fmtJson()` で整形し、整形した文字列は件に取っておく。`history` キーは表示から外す (送る state には含む、D-16)
+  JSON は `fmtJson()` で整形し、整形した文字列は件に取っておく。履歴は1文の `story` になったのでそのまま出す (D-21)
 
 ## まだ無いもの
 
