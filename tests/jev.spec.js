@@ -360,3 +360,42 @@ test('履歴は英文にして渡し、長く鳴らしても伸びない (D-21)'
   await expect(page.locator('#jevlog pre.q').first()).toContainText('"story"');
   await expect(page.locator('#jevlog pre.q').first()).toContainText('min in,');
 });
+
+/* 転調が8件の履歴から溢れても、story を組むところで落ちないこと (PR#10 のレビュー指摘 P1)。
+   落ちると jevAsk() が jev.inflight を立てたまま例外で抜けるので、その種類の問い合わせが二度と出なくなる */
+test('転調が履歴から溢れても問い合わせが止まらない (D-21)', async ({ page }) => {
+  test.setTimeout(180000);
+  const errs = [];
+  page.on('pageerror', e => errs.push(String(e)));
+  const seen = await fakeWorker(page, () => ({}));
+  await start(page);
+  await page.locator('#s_shift').fill('1');           // 平行移動を必ず起こす
+  await expect.poll(() => seen.some(b => /parallel shift/.test(b.state.story)), { timeout: 90000 }).toBe(true);
+  await page.locator('#s_shift').fill('0');           // 以降は転調しない
+  const before = seen.length;
+  // 手でシーンを9回替える。keys の履歴 (8件) が転調なしの件で埋まる
+  for (let i = 0; i < 9; i++) {
+    await page.locator('.scenebtn').nth(i % 14).click();
+    await page.waitForTimeout(400);
+  }
+  await expect.poll(() => seen.length, { timeout: 30000 }).toBeGreaterThan(before);
+  expect(errs).toEqual([]);
+  // 溢れたあとも、転調の回数と「何小節前か」は言える
+  const last = seen[seen.length - 1].state.story;
+  expect(last).toMatch(/parallel shifts?, the last \d+ bars? ago/);
+});
+
+/* リフの累計を「このモチーフを N 回」と言わないこと (PR#10 のレビュー指摘 P2) */
+test('リフは累計とモチーフの繰り返しを分けて言う (D-21)', async ({ page }) => {
+  test.setTimeout(120000);
+  const seen = await fakeWorker(page, () => ({}));
+  await start(page);
+  await expect.poll(() => seen.some(b => /the most recent \(/.test(b.state.story)), { timeout: 90000 }).toBe(true);
+  for (const b of seen) {
+    const st = b.state.story;
+    expect(st).not.toMatch(/The riff motif .* has been played/);
+    const m = st.match(/that motif appears (\d+) times in the last (\d+) riffs/);
+    // モチーフの回数は、手元に残っている件数を超えない
+    if (m) expect(Number(m[1])).toBeLessThanOrEqual(Number(m[2]));
+  }
+});

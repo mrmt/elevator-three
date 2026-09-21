@@ -3703,12 +3703,14 @@ const jevActive=()=>!JEV_OFF && target.jev>0 && running && barCount>=jev.pauseUn
    種類ごとに直近の8件だけを持ち、それ以前は件数だけ histTotal に残す */
 const hist={scenes:[], phrases:[], events:[], dubs:[], riffs:[], keys:[]};
 const histTotal={scenes:0, phrases:0, events:0, dubs:0, riffs:0, keys:0, shifts:0};
+/* 最後に平行移動した小節。8件の枠から溢れても「何小節前か」を言えるように、履歴とは別に持つ */
+let lastShiftBar=-1;
 function histPush(k,v){
   const a=hist[k];
   a.push({bar:barCount,...v});
   if(a.length>8) a.shift();
   histTotal[k]++;
-  if(k==='keys' && v.shift) histTotal.shifts++;
+  if(k==='keys' && v.shift){ histTotal.shifts++; lastShiftBar=barCount; }
 }
 
 /* 履歴は生の配列ではなく、英文にして渡す (D-21)。
@@ -3729,9 +3731,8 @@ function narrateHistory(){
     `${sc.id} (${GROUP_LABEL[sc.group]}), ${n(b-sceneStartBar,'bar')} in of a planned ${sceneBars}.`);
 
   const chain=hist.keys.slice(-4).map(e=>e.key).filter((k,i,a)=>i===0 || k!==a[i-1]);
-  const lastShift=[...hist.keys].reverse().find(e=>e.shift);
   if(chain.length) out.push(`Keys have walked ${chain.join(' → ')}` +
-    (histTotal.shifts ? `; ${n(histTotal.shifts,'parallel shift')}, the last ${ago(lastShift.bar)}` : '') + '.');
+    (histTotal.shifts ? `; ${n(histTotal.shifts,'parallel shift')}, the last ${ago(lastShiftBar)}` : '') + '.');
 
   const ph=hist.phrases.slice(-4).map(e=>PHRASE_LABEL[e.phrase]||e.phrase);
   if(ph.length) out.push(`Recent phrases: ${ph.join(' → ')}, ${n(b-phraseStartBar,'bar')} into the current one.`);
@@ -3742,9 +3743,13 @@ function narrateHistory(){
       (ev[1] ? `, before that ${ev[1]}.` : '.')
     : 'No ornament event has fired yet.');
 
+  /* リフは累計と、いまのモチーフの繰り返し回数を分けて言う。
+     histTotal.riffs はモチーフを問わない累計なので、これを「このモチーフを N 回」と言うと嘘になる */
   const rf=hist.riffs[hist.riffs.length-1];
+  const same=rf ? hist.riffs.filter(e=>e.notes===rf.notes).length : 0;
   out.push(rf
-    ? `The riff motif (${rf.notes}, ${rf.rhythm}) has been played ${n(histTotal.riffs,'time')}, last ${ago(rf.bar)}.`
+    ? `${n(histTotal.riffs,'riff')} so far, the most recent (${rf.notes}, ${rf.rhythm}) ${ago(rf.bar)}` +
+      (same>1 ? `; that motif appears ${n(same,'time')} in the last ${n(hist.riffs.length,'riff')}.` : '.')
     : 'No riff has been played yet.');
 
   const db=hist.dubs[hist.dubs.length-1];
