@@ -3700,12 +3700,56 @@ const jevInfl=()=>JEV_OFF ? 0 : current.jev;
 const jevActive=()=>!JEV_OFF && target.jev>0 && running && barCount>=jev.pauseUntil;
 
 /* 出来事の記録。Jev に「いままで何が起きてきたか」を渡すため (D-6)。
-   種類ごとに直近の8件だけを持つ */
+   種類ごとに直近の8件だけを持ち、それ以前は件数だけ histTotal に残す */
 const hist={scenes:[], phrases:[], events:[], dubs:[], riffs:[], keys:[]};
+const histTotal={scenes:0, phrases:0, events:0, dubs:0, riffs:0, keys:0, shifts:0};
 function histPush(k,v){
   const a=hist[k];
   a.push({bar:barCount,...v});
   if(a.length>8) a.shift();
+  histTotal[k]++;
+  if(k==='keys' && v.shift) histTotal.shifts++;
+}
+
+/* 履歴は生の配列ではなく、英文にして渡す (D-21)。
+   直近は具体的に、それ以前は件数だけにするので、長く鳴らしても文の長さは増えない。
+   小節は絶対値ではなく「何小節前か」で語る。state.bar はいまの小節として別に渡している */
+function narrateHistory(){
+  const b=barCount, out=[];
+  const ago=x=>{ const d=b-x; return d<=0 ? 'just now' : d===1 ? 'a bar ago' : `${d} bars ago`; };
+  const n=(c,w)=>`${c} ${w}${c===1 ? '' : 's'}`;
+  const side=id=>{ const s=SCENES.find(x=>x.id===id); return s ? GROUP_LABEL[s.group] : id; };
+  out.push(`${Math.round(b*16*stepDur()/60)} min in, ${b} bars.`);
+
+  const sc=SCENES[sceneIdx];
+  // 履歴の最後はいまのシーンなので、その手前の3つを「ここまで」として語る
+  const before=hist.scenes.slice(-4,-1).map(e=>`${e.id} (${side(e.id)})`);
+  out.push(`${n(histTotal.scenes,'scene')} so far` +
+    (before.length ? `, lately ${before.join(' → ')} → ` : ', now ') +
+    `${sc.id} (${GROUP_LABEL[sc.group]}), ${n(b-sceneStartBar,'bar')} in of a planned ${sceneBars}.`);
+
+  const chain=hist.keys.slice(-4).map(e=>e.key).filter((k,i,a)=>i===0 || k!==a[i-1]);
+  const lastShift=[...hist.keys].reverse().find(e=>e.shift);
+  if(chain.length) out.push(`Keys have walked ${chain.join(' → ')}` +
+    (histTotal.shifts ? `; ${n(histTotal.shifts,'parallel shift')}, the last ${ago(lastShift.bar)}` : '') + '.');
+
+  const ph=hist.phrases.slice(-4).map(e=>PHRASE_LABEL[e.phrase]||e.phrase);
+  if(ph.length) out.push(`Recent phrases: ${ph.join(' → ')}, ${n(b-phraseStartBar,'bar')} into the current one.`);
+
+  const ev=hist.events.slice(-2).reverse().map(e=>`${EVENT_LABEL[e.event]||e.event} ${ago(e.bar)}`);
+  out.push(ev.length
+    ? `${n(histTotal.events,'ornament event')} so far, most recently ${ev[0]}` +
+      (ev[1] ? `, before that ${ev[1]}.` : '.')
+    : 'No ornament event has fired yet.');
+
+  const rf=hist.riffs[hist.riffs.length-1];
+  out.push(rf
+    ? `The riff motif (${rf.notes}, ${rf.rhythm}) has been played ${n(histTotal.riffs,'time')}, last ${ago(rf.bar)}.`
+    : 'No riff has been played yet.');
+
+  const db=hist.dubs[hist.dubs.length-1];
+  if(db) out.push(`${n(histTotal.dubs,'dub throw')}, the last ${ago(db.bar)}.`);
+  return out.join(' ');
 }
 const keyName=pc=>`${NOTE_NAMES[((pc%12)+12)%12]} ${MODE_LABEL[SCENES[sceneIdx].group]}`;
 const DEG_NAME=['I','bII','II','bIII','III','IV','#IV','V','bVI','VI','bVII','VII'];
@@ -3722,7 +3766,7 @@ function jevState(extra){
     key:keyName(tonic()),
     chord:`${DEG_NAME[chordDeg%12]} ${chordQual}`,
     controls:{density:r2(current.density), glitch:r2(current.glitch), evolution:r2(current.evolution)},
-    history:hist,
+    story:narrateHistory(),
     ...extra,
   };
 }
@@ -3736,13 +3780,13 @@ const JEV_LOG_MAX=20;
 const jevEntries=[], ansEntry=new WeakMap();
 const pct=p=>Math.round(p*100)+'%';
 /* JSON の整形。深さ2までは改行と字下げ、それより深いものは1行に畳む。
-   送る state は履歴を含んで長いので、全部を開くと1件が100行を超える */
+   D-16 では長すぎる history を表示から外していたが、D-21 で1文の story になったのでそのまま出す */
 function fmtJson(v,depth=0,ind=''){
   if(v===null || typeof v!=='object' || depth>=2) return JSON.stringify(v);
   const pad=ind+'  ';
   const items = Array.isArray(v)
     ? v.map(x=>pad+fmtJson(x,depth+1,pad))
-    : Object.entries(v).filter(([k])=>k!=='history').map(([k,x])=>pad+JSON.stringify(k)+': '+fmtJson(x,depth+1,pad));
+    : Object.entries(v).map(([k,x])=>pad+JSON.stringify(k)+': '+fmtJson(x,depth+1,pad));
   if(!items.length) return Array.isArray(v) ? '[]' : '{}';
   const [o,c]=Array.isArray(v) ? ['[',']'] : ['{','}'];
   return o+'\n'+items.join(',\n')+'\n'+ind+c;

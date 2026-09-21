@@ -112,7 +112,7 @@ test('イベントは Jev の答えどおりに起きる', async ({ page }) => {
   // 質問文は送らない。選択肢と state だけ
   expect(Object.keys(req.ask.event)).toContain('none');
   expect(req.state.scene.id).toBeTruthy();
-  expect(req.state.history).toBeTruthy();
+  expect(typeof req.state.story).toBe('string');
   expect(JSON.stringify(req)).not.toContain('instructions');
 });
 
@@ -332,4 +332,31 @@ test('DECISION は JEV の下にあり、3行の高さでスクロールせず�
   await expect(d.first()).toHaveAttribute('title', /^bar \d+/);
   const bars = await d.evaluateAll(es => es.map(e => parseInt(e.title.slice(4), 10)));
   expect(bars).toEqual([...bars].sort((a, b) => b - a));
+});
+
+test('履歴は英文にして渡し、長く鳴らしても伸びない (D-21)', async ({ page }) => {
+  test.setTimeout(120000);
+  const seen = await fakeWorker(page, () => ({}));
+  await start(page);
+  // 出来事がひととおり積まれるまで鳴らす
+  await expect.poll(() => (seen.length ? seen[seen.length - 1].state.bar : 0), { timeout: 90000 }).toBeGreaterThan(40);
+  for (const b of seen) {
+    const st = b.state;
+    // 生の配列は渡さない。1本の英文だけ
+    expect(st.history).toBeUndefined();
+    expect(typeof st.story).toBe('string');
+    expect(st.story).toMatch(/^\d+ min in, \d+ bars\./);
+    expect(st.story).toMatch(/scenes? so far/);
+    expect(st.story).toMatch(/riff/);
+    // 絶対の小節番号ではなく「何小節前か」で語る
+    expect(st.story).not.toMatch(/\bat bar \d+/);
+    // 節の数は決まっているので、鳴らし続けても長さが伸びない
+    expect(st.story.length).toBeLessThan(900);
+  }
+  // 出来事が積まれても、最初の頃と終わりで桁は変わらない
+  const first = seen[0].state.story.length, last = seen[seen.length - 1].state.story.length;
+  expect(last).toBeLessThan(first + 500);
+  // 1文になったので JEV セクションにも出す (D-16 で隠していた history を置き換えた)
+  await expect(page.locator('#jevlog pre.q').first()).toContainText('"story"');
+  await expect(page.locator('#jevlog pre.q').first()).toContainText('min in,');
 });
