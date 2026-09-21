@@ -7,14 +7,14 @@ TypeSafe の [Jev](https://typesafe.ai/blog/introducing-system-one-models-and-je
 
 **最新版: v0.5** — 変更点は下の[変更履歴](#変更履歴)を参照。
 
-`index.html` をブラウザで開き、卓の中央にある大きな再生ボタンを押すと鳴りはじめる。
-ブラウザの制限で、開いただけでは音は出ない。音と操作は two v0.6 を引き継いでいる。
+[https://elevator-noise.com/three/](https://elevator-noise.com/three/) をブラウザで開き、中央にある大きな再生ボタンを押すと鳴りはじめる。
+Webブラウザの一般的な仕様の制限のため、開いただけでは音は出ないため、再生ボタンを押す必要がある。音と操作は elevator-two v0.6 を引き継いでいる。
 次のシーン・遷移の方式・キーと進行・フレーズ・イベント・ダブ・リフの旋律は、数小節先に Jev へ問い合わせ、
-返った確率分布から引く。control の `jev` はその割合で、0 にすると two と同じに鳴る。
+返った確率分布から引く。control の `jev` はその割合で、0 にすると elevator-two と同じく Jev を用いた AI 判断は用いず乱数を用いた判断で演奏する。
 問い合わせは中継の Worker (`worker/`) を通す。繋がらないときは手元の判断で鳴り続ける。
 
 設計の議論と決定は [docs/DESIGN.md](docs/DESIGN.md) に集約している。D-1 から振り直した。
-two から引き継いだコードや文書に残る `two:D-n` は、two の決定 ([docs/two-DESIGN.md](docs/two-DESIGN.md)) を指す。
+elevator-two から引き継いだコードや文書に残る `two:D-n` は、two の決定 ([docs/two-DESIGN.md](docs/two-DESIGN.md)) を指す。
 シーンの定義は [docs/SCENES.md](docs/SCENES.md)、実装の構造は [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)、
 テストは [docs/TESTING.md](docs/TESTING.md) に分けてある。
 
@@ -27,11 +27,11 @@ two から引き継いだコードや文書に残る `two:D-n` は、two の決�
 | 通信 | ネットワークに一切繋がらない | 判断の問い合わせだけ、自前の中継に繋がる |
 | 実装 | 単一 `index.html`、ビルド工程なし | 同左を踏襲 |
 
-コードは共有せず、two から土台をコピーして分岐させた。共通化のための仕組みは持たない。
+コードは外の elevator シリーズとは共有せず、elevator-two から土台をコピーして分岐させた。共通化のための仕組みは持たない。
 
 ## Jev の中継 (`worker/`)
 
-ブラウザから `api.typesafe.ai` は呼べない (CORS) ので、Cloudflare Worker `elevator-three-api` を挟む (D-3)。
+CORS制限のためブラウザから直接 `api.typesafe.ai` は呼べないので、Cloudflare Worker `elevator-three-api` を挟む (D-3)。
 
 ```
 cd worker
@@ -39,7 +39,7 @@ npx wrangler secret put TYPESAFE_API_KEY   # 初回だけ
 npx wrangler deploy                        # three-api.elevator-noise.com
 ```
 
-手元では `worker/.dev.vars` に `TYPESAFE_API_KEY=...` を書いて `npx wrangler dev` (ポート 8787) を立てる。
+ローカルでテストするときは `worker/.dev.vars` に `TYPESAFE_API_KEY=...` を書いて `npx wrangler dev` (ポート 8787) を立てる。
 `localhost` / `127.0.0.1` で開いた `index.html` は、既定でこちらに問い合わせる。
 Worker の試験は `npm run test:worker`。
 
@@ -51,7 +51,7 @@ Jev に渡す演奏履歴を、生の JSON 配列から1本の英文 (`story`) �
 長く鳴らしても送る量が増えず、セット全体の経緯は数として残る。
 
 **操作と見た目**
-- jev 欄の query に履歴を出すようにした。1文になったので読める (D-21。D-16 の除外を解除)
+- JEV 欄の query に履歴を出すようにした。ナラティブな英語文になったため、大きなJSON配列のように表示領域を過剰に消費することなく表示できる (D-21。D-16 の除外を解除)
 
 **開発**
 - 履歴は `narrateHistory()` が英文に畳んで渡す。節は固定 (経過・シーン・キー・フレーズ・イベント・リフ・ダブ) で、
@@ -65,12 +65,12 @@ Jev に渡す演奏履歴を、生の JSON 配列から1本の英文 (`story`) �
 ### v0.4 (2026-09-19)
 
 音色と細部の判断も Jev に任せ、Jev の確率に掛ける温度をスライダーで決められるようにした。
-Jev の判断は、右カラムの新しい decision 欄に出す。配色を青紫とクリームにした。
+Jev の判断は、右カラムの新しい DECISION 欄に出す。配色を青紫とクリームにした。
 
 **操作と見た目**
 - 配色を青紫の地、白い文字、淡いクリームの差し色にした。about と docs の解説 html も同じ (D-16)
 - 既定値を上げた。`shift` / `lush` を 0.8、`jev` を 1、mixer の `funk bass` / `other bass` を 0.5 (D-16)
-- jev 欄の JSON から `history` を外した。送る state には含む (D-16)
+- 長大な JSON 配列が表示領域を過剰に消費するため、jev 欄の JSON から `history` を外した。送る state には含む (D-16)
 - 右カラムの jev 欄の下に decision 欄を足し、Jev の答えで音楽的に何が起こるかをそこへ移した。高さは3行で、新しい順に1件1行。
   jev 欄のやり取りが長くなり、スクロールしないと見えなくなったため (D-19)
 - decision 群に `temperature` (0〜2、既定 1) を足した。Jev の確率に掛ける温度で、下げるほど Jev のいちばんの答えに寄り、0 では必ずそれを取る。上げるほど均す (D-18)
