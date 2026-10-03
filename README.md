@@ -12,6 +12,7 @@ Webブラウザの一般的な仕様の制限のため、開いただけでは�
 次のシーン・遷移の方式・キーと進行・フレーズ・イベント・ダブ・リフの旋律は、数小節先に Jev へ問い合わせ、
 返った確率分布から引く。control の `jev` はその割合で、0 にすると elevator-two と同じく Jev を用いた AI 判断は用いず乱数を用いた判断で演奏する。
 問い合わせは中継の Worker (`worker/`) を通す。繋がらないときは手元の判断で鳴り続ける。
+control の `MIDI clock output` で出力ポートを選ぶと、テンポに合わせた MIDI クロックと Start / Stop を送る (Chrome / Edge。D-22)。
 
 設計の議論と決定は [docs/DESIGN.md](docs/DESIGN.md) に集約している。D-1 から振り直した。
 elevator-two から引き継いだコードや文書に残る `two:D-n` は、two の決定 ([docs/two-DESIGN.md](docs/two-DESIGN.md)) を指す。
@@ -28,6 +29,23 @@ elevator-two から引き継いだコードや文書に残る `two:D-n` は、tw
 | 実装 | 単一 `index.html`、ビルド工程なし | 同左を踏襲 |
 
 コードは外の elevator シリーズとは共有せず、elevator-two から土台をコピーして分岐させた。共通化のための仕組みは持たない。
+
+## MIDI クロック (D-22)
+
+control → master の `MIDI clock output` で出力ポートを選ぶと、テンポに合わせた MIDI クロック (24 PPQN) を送る。
+再生を始めた小節の頭で Start、停止で Stop も送る。BPM は three の BPM スライダーとシーンに従う。
+Web MIDI を使うので Chrome / Edge で開く (Safari では欄が出ない)。
+
+macOS から MIDI クロックを出力してなんらかの MIDI デバイスを同期させるには、IAC ドライバを有効にする。
+
+1. 「Audio MIDI 設定」(アプリケーション → ユーティリティ) を開く
+2. メニューの「ウインドウ → MIDI スタジオを表示」(⌘2)
+3. 「IAC ドライバ」をダブルクリックし、「装置はオンライン」にチェックを入れて「適用」。
+   ポート名 (既定は「バス 1」) は同じ画面で変えられる
+4. three の `MIDI clock output` で `connect…` を選び、ブラウザの MIDI の許可を出してから
+   `IAC ドライバ バス 1` を選ぶ
+
+選んだポートは覚えておき、次に開いたときは許可済みなら自動で選び直す。
 
 ## Jev の中継 (`worker/`)
 

@@ -135,6 +135,11 @@ DJ が次の曲のビートを差し込むのと同じ範囲。
 波・BPM の推移・ミックスのフェードは時間で進むので止まらない。再生を始めて並びを1度作るまで
 (`barBuilt`) は、ループを立てていても通常どおり進む。
 
+**MIDI クロック (D-22)** — `seqTick()` が16分1つを予約するたびに `midiClockStep()` が `0xF8` を6発 (24 PPQN) 予約する。
+時刻は `audioToPerfMs()` が `ctx.getOutputTimestamp()` で `performance.now()` 基準に直し、`send()` のタイムスタンプで渡す。
+Start (`0xFA`) は小節の頭まで待って送り (`midiStartPending`)、Stop (`0xFC`) は `clear()` で予約を捨ててから送る。
+小節ループや遷移の間もクロックは流し続ける。出力先は control → master の `MIDI clock output` (`midiPortSelect()`) で選ぶ。
+
 ## 音の経路
 
 ```
