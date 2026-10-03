@@ -4233,7 +4233,7 @@ function midiSetOut(port){
 function midiPortSelect(host){
   const wrap=document.createElement('div'); wrap.className='param';
   const lab=document.createElement('label'); lab.htmlFor='s_midi';
-  const name=document.createElement('span'); name.textContent='MIDI clock';
+  const name=document.createElement('span'); name.textContent='MIDI clock output';
   name.dataset.tip='Send MIDI clock (24 PPQN) with start and stop to the chosen output, so other gear follows the tempo.';
   lab.append(name);
   const sel=document.createElement('select'); sel.id='s_midi'; sel.className='midisel';
