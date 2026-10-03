@@ -5,7 +5,7 @@
 TypeSafe の [Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev) に文脈つきで任せて、
 展開と即興を豊かにすることを目指す。
 
-**最新版: v0.5** — 変更点は下の[変更履歴](#変更履歴)を参照。
+**最新版: v0.6** — 変更点は下の[変更履歴](#変更履歴)を参照。
 
 [https://elevator-noise.com/three/](https://elevator-noise.com/three/) をブラウザで開き、中央にある大きな再生ボタンを押すと鳴りはじめる。
 Webブラウザの一般的な仕様の制限のため、開いただけでは音は出ないため、再生ボタンを押す必要がある。音と操作は elevator-two v0.6 を引き継いでいる。
@@ -62,6 +62,24 @@ npx wrangler deploy                        # three-api.elevator-noise.com
 Worker の試験は `npm run test:worker`。
 
 ## 変更履歴
+
+### v0.6 (2026-10-03)
+
+MIDI クロックを出力できるようにした。外部の機材を three のテンポに同期させられる。
+
+**操作と見た目**
+- control → master に `MIDI clock output` を足した。`connect…` で出力ポートの一覧を取り、選んだポートへ
+  MIDI クロック (24 PPQN) を送る。再生を始めた小節の頭で Start、停止で Stop も送る (D-22)
+- 選んだポートは覚えておき、次に開いたときは許可済みなら自動で選び直す。reset all では戻さない (D-22)
+- Web MIDI の無いブラウザ (Safari 系) では欄を出さない (D-22)
+- README に、macOS で IAC ドライバを有効にする手順を書いた
+
+**開発**
+- クロックは音と同じ先読みのループ (`seqTick()`) で、16分1つにつき6発を音声時計の時刻に予約する。
+  `getOutputTimestamp()` で `performance.now()` 基準に直し、`send()` のタイムスタンプで渡すので、聞こえる音と揃う (D-22)
+- Stop の前に `clear()` で予約済みのクロックを捨てる。小節ループとシーン遷移の間もクロックは止めない (D-22)
+- 試験を足した (`tests/midi.spec.js`)。偽の Web MIDI で、Start → クロックの順序、間隔が BPM どおりであること、
+  Stop、off、ポートの選び直し、Web MIDI の無い環境を見る
 
 ### v0.5 (2026-09-21)
 
