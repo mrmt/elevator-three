@@ -12,6 +12,7 @@ TypeSafe の [Jev](https://typesafe.ai/blog/introducing-system-one-models-and-je
 次のシーン・遷移の方式・キーと進行・フレーズ・イベント・ダブ・リフの旋律は、数小節先に Jev へ問い合わせ、
 返った確率分布から引く。control の `jev` はその割合で、0 にすると two と同じに鳴る。
 問い合わせは中継の Worker (`worker/`) を通す。繋がらないときは手元の判断で鳴り続ける。
+control の `MIDI clock` で出力ポートを選ぶと、テンポに合わせた MIDI クロックと Start / Stop を送る (Chrome / Edge。D-22)。
 
 設計の議論と決定は [docs/DESIGN.md](docs/DESIGN.md) に集約している。D-1 から振り直した。
 two から引き継いだコードや文書に残る `two:D-n` は、two の決定 ([docs/two-DESIGN.md](docs/two-DESIGN.md)) を指す。

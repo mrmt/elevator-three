@@ -62,6 +62,15 @@ export default defineConfig({
         launchOptions: { args: ['--autoplay-policy=no-user-gesture-required'] },
       },
     },
+    // MIDI クロック (D-22)。Web MIDI は addInitScript の偽物に差し替える
+    {
+      name: 'midi-chromium',
+      testMatch: /midi\.spec\.js/,
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: { args: ['--autoplay-policy=no-user-gesture-required'] },
+      },
+    },
     // macOS相当。2カラムのデスクトップレイアウト
     {
       name: 'desktop-chromium',
