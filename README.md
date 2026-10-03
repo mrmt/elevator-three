@@ -30,6 +30,23 @@ two から引き継いだコードや文書に残る `two:D-n` は、two の決�
 
 コードは共有せず、two から土台をコピーして分岐させた。共通化のための仕組みは持たない。
 
+## MIDI クロック (D-22)
+
+control → master の `MIDI clock output` で出力ポートを選ぶと、テンポに合わせた MIDI クロック (24 PPQN) を送る。
+再生を始めた小節の頭で Start、停止で Stop も送る。BPM は three の BPM スライダーとシーンに従う。
+Web MIDI を使うので Chrome / Edge で開く (Safari では欄が出ない)。
+
+macOS から MIDI クロックを出力してなんらかの MIDI デバイスを同期させるには、IAC ドライバを有効にする。
+
+1. 「Audio MIDI 設定」(アプリケーション → ユーティリティ) を開く
+2. メニューの「ウインドウ → MIDI スタジオを表示」(⌘2)
+3. 「IAC ドライバ」をダブルクリックし、「装置はオンライン」にチェックを入れて「適用」。
+   ポート名 (既定は「バス 1」) は同じ画面で変えられる
+4. three の `MIDI clock output` で `connect…` を選び、ブラウザの MIDI の許可を出してから
+   `IAC ドライバ バス 1` を選ぶ
+
+選んだポートは覚えておき、次に開いたときは許可済みなら自動で選び直す。
+
 ## Jev の中継 (`worker/`)
 
 ブラウザから `api.typesafe.ai` は呼べない (CORS) ので、Cloudflare Worker `elevator-three-api` を挟む (D-3)。
