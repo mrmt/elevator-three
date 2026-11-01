@@ -5,7 +5,7 @@
 TypeSafe の [Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev) に文脈つきで任せて、
 展開と即興を豊かにすることを目指す。
 
-**最新版: v0.6** — 変更点は下の[変更履歴](#変更履歴)を参照。
+**最新版: v0.7** — 変更点は下の[変更履歴](#変更履歴)を参照。
 
 [https://elevator-noise.com/three/](https://elevator-noise.com/three/) をブラウザで開き、中央にある大きな再生ボタンを押すと鳴りはじめる。
 Webブラウザの一般的な仕様の制限のため、開いただけでは音は出ないため、再生ボタンを押す必要がある。音と操作は elevator-two v0.6 を引き継いでいる。
@@ -63,6 +63,22 @@ npx wrangler deploy                        # three-api.elevator-noise.com
 Worker の試験は `npm run test:worker`。
 
 ## 変更履歴
+
+### v0.7 (2026-11-01)
+
+BPM 固定モード `fix BPM` を足した。シーンが変わっても、BPM スライダーで決めたテンポで鳴り続ける。
+
+**操作と見た目**
+- control → master の BPM スライダーの下に `fix BPM` のトグルを足した。入れている間は、どのシーンでも、
+  シーン遷移や next の最中も、BPM スライダーの値で鳴る (D-23)
+- 入/切やスライダーの操作でも、テンポは従来どおり数秒かけて寄る。拍は飛ばない (D-23)
+- reset all では戻さない。loop bar と同じ扱い (D-23)
+
+**開発**
+- `fix BPM` の間は `bpmTarget()` が `bpmCenter` をそのまま返す。Jev に見せるシーン候補 (`sceneOpt()`) からは BPM を外す (D-23)
+- 試験を足した (`tests/fixbpm.spec.js`)。シーンを跨いでも BPM が固定値のままであること、切るとシーンの bpm へ寄ること、
+  Jev の候補から BPM が消えることを見る
+- CI の actions をバージョン固定し、`actions.lock` を足した
 
 ### v0.6 (2026-10-03)
 
