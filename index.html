@@ -732,6 +732,7 @@ for(const k in P){ target[k]=P[k].def; current[k]=P[k].def; }
 let glide=5;         // 秒。目標に到達するおおよその時間
 let volume=80;
 let bpmCenter=125;   // BPM スライダー。シーンの bpm はこの前後で動く (two:D-11)
+let bpmFixed=false;  // fix BPM (D-23)。立っている間はシーンに関わらず bpmCenter で鳴らす
 
 /* ============================================================
    オーディオ
@@ -3490,8 +3491,10 @@ let loopBar=false, barBuilt=false;
 const uiSteps=[];   // 表示の予定。遅れて届いた分は最新だけ描く
 
 // シーンの bpm を、BPM スライダーの中心値のぶんだけ平行移動する (two:D-11)。
-// 遷移中は次のシーンの値を目標にして、ブレイクの間に寄せていく (two:D-6)
+// 遷移中は次のシーンの値を目標にして、ブレイクの間に寄せていく (two:D-6)。
+// fix BPM (D-23) の間はスライダーの値そのものを目標にする
 function bpmTarget(){
+  if(bpmFixed) return bpmCenter;
   const sc = pendingScene>=0 ? SCENES[pendingScene] : SCENES[sceneIdx];
   return clamp(sc.bpm + (bpmCenter-125), 100, 150);
 }
@@ -4037,7 +4040,8 @@ function sceneCandidates(n){
 }
 const sceneOpt=i=>{
   const s=SCENES[i];
-  return `${GROUP_LABEL[s.group]}, ${s.kit} kit, ${s.bpm} BPM, dark-bright ${s.yy.toFixed(2)}. ${SCENE_DESC[s.id]}`;
+  // fix BPM (D-23) の間はどのシーンも同じテンポなので、BPM は見せない
+  return `${GROUP_LABEL[s.group]}, ${s.kit} kit, ${bpmFixed?'':s.bpm+' BPM, '}dark-bright ${s.yy.toFixed(2)}. ${SCENE_DESC[s.id]}`;
 };
 
 function jevPlan(bar){
@@ -4508,8 +4512,21 @@ const controlBody=mixGroup('control',ctlRowEl);
   addSlider(g,{id:'volume', label:'volume', tip:'Output level', min:0, max:100, step:1, value:volume,
     fmt:String, onInput:v=>{ volume=v; }});
   // BPM の中心値。シーンごとの自動選択はこの前後で動く (two:D-11)
-  addSlider(g,{id:'bpm', label:'BPM', tip:'Centre BPM. The per-scene choice moves around this value.',
+  addSlider(g,{id:'bpm', label:'BPM', tip:'Centre BPM. The per-scene choice moves around this value, or with fix BPM on, the tempo itself.',
     min:110, max:140, step:1, value:bpmCenter, fmt:String, onInput:v=>{ bpmCenter=v; }});
+  // fix BPM (D-23)。シーンの bpm を使わず、BPM スライダーの値で固定する。
+  // 切り替えても拍が飛ばないよう、テンポはいつもどおり bpmCur が寄せていく
+  {
+    const b=document.createElement('button');
+    b.className='toggle'; b.id='fixbpm'; b.setAttribute('aria-pressed','false');
+    b.dataset.tip='Hold the tempo at the BPM slider value in every scene.';
+    b.innerHTML='<span>fix BPM</span><span class="lamp"></span>';
+    b.addEventListener('click',()=>{
+      bpmFixed=!bpmFixed;
+      b.setAttribute('aria-pressed',String(bpmFixed));
+    });
+    g.appendChild(b);
+  }
   // 推移時間。two ではリズムはビートに従うので、これが効くのは連続パラメータだけ
   addSlider(g,{id:'glide', label:'glide',
     tip:'How long continuous parameters take to reach their target. Rhythm follows the beat instead.',
