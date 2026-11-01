@@ -244,7 +244,7 @@
         <tr><td class="k">jubilee</td><td class="v">130</td><td>天井まで積んで戻すを繰り返す。最も派手</td></tr>
       </tbody>
     </table></div>
-    <p class="note">BPM は各シーンの基準値。<code>BPM</code> スライダーを動かすと、全シーンが同じだけずれる。</p>
+    <p class="note">BPM は各シーンの基準値。<code>BPM</code> スライダーを動かすと、全シーンが同じだけずれる。<code>fix BPM</code> を入れると、どのシーンもスライダーの値で鳴る。</p>
 
     <h3>次のシーンの選ばれ方</h3>
     <p>20〜40分で陰 (dark) と陽 (bright) を往復する、ゆっくりした波がある。次のシーンは、波のいまの位置に近い5つの中から、
@@ -292,6 +292,7 @@
         <tr class="grp"><td colspan="3">master</td></tr>
         <tr><td class="k">volume</td><td class="v">0–100 / 80</td><td>出力の音量</td></tr>
         <tr><td class="k">BPM</td><td class="v">110–140 / 125</td><td>テンポの中心。各シーンの BPM がこの前後に平行移動する。テンポは急に飛ばず、数秒かけて寄る</td></tr>
+        <tr><td class="k">fix BPM</td><td class="v">on / off</td><td>テンポを <code>BPM</code> スライダーの値に固定する。どのシーンでも同じテンポで鳴る。切り替えたときも数秒かけて寄る</td></tr>
         <tr><td class="k">glide</td><td class="v">3–120s / 5s</td><td>下の character などのスライダーを動かしたとき、音が目標に追いつくまでの時間。リズムは拍に従うので影響しない</td></tr>
         <tr class="grp"><td colspan="3">scene</td></tr>
         <tr><td class="k">next</td><td class="v">—</td><td>いまのシーンを切り上げて次へ。再生中は4小節で乗り換え、それまで点滅する。止まっているときはすぐ切り替わる</td></tr>
@@ -489,7 +490,7 @@ key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal 
         <tr><td class="k">jubilee</td><td class="v">130</td><td>Stacks to the ceiling and drops, again and again. The showiest scene.</td></tr>
       </tbody>
     </table></div>
-    <p class="note">These are base tempos. Moving the <code>BPM</code> slider shifts every scene by the same amount.</p>
+    <p class="note">These are base tempos. Moving the <code>BPM</code> slider shifts every scene by the same amount. With <code>fix BPM</code> on, every scene plays at the slider value.</p>
 
     <h3>Choosing the next scene</h3>
     <p>A slow wave travels from dark to bright and back over 20 to 40 minutes. The next scene is drawn from the five closest to where the wave is,
@@ -537,6 +538,7 @@ key <b>A dorian +3</b> Cmaj9/D  [sustain lush chop + ep]  bass 3 +phaser +pedal 
         <tr class="grp"><td colspan="3">master</td></tr>
         <tr><td class="k">volume</td><td class="v">0–100 / 80</td><td>Output level</td></tr>
         <tr><td class="k">BPM</td><td class="v">110–140 / 125</td><td>Tempo centre. Every scene's tempo shifts around it; changes glide in over a few seconds rather than jumping</td></tr>
+        <tr><td class="k">fix BPM</td><td class="v">on / off</td><td>Hold the tempo at the <code>BPM</code> slider value, so every scene plays at the same tempo. Switching it also glides in over a few seconds</td></tr>
         <tr><td class="k">glide</td><td class="v">3–120s / 5s</td><td>How long the sound takes to catch up when you move the character, motion and tonality sliders. Rhythm follows the beat and is not affected</td></tr>
         <tr class="grp"><td colspan="3">scene</td></tr>
         <tr><td class="k">next</td><td class="v">—</td><td>Cut the current scene short. While playing, the switch comes after four bars and the button blinks until then; when stopped it switches at once</td></tr>

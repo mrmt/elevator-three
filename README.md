@@ -34,6 +34,7 @@ elevator-two から引き継いだコードや文書に残る `two:D-n` は、tw
 
 control → master の `MIDI clock output` で出力ポートを選ぶと、テンポに合わせた MIDI クロック (24 PPQN) を送る。
 再生を始めた小節の頭で Start、停止で Stop も送る。BPM は three の BPM スライダーとシーンに従う。
+外の機材を一定のテンポで鳴らしたいときは、BPM スライダーの下の `fix BPM` を入れる (D-23)。
 Web MIDI を使うので Chrome / Edge で開く (Safari では欄が出ない)。
 
 macOS から MIDI クロックを出力してなんらかの MIDI デバイスを同期させるには、IAC ドライバを有効にする。

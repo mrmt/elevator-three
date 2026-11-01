@@ -71,6 +71,15 @@ export default defineConfig({
         launchOptions: { args: ['--autoplay-policy=no-user-gesture-required'] },
       },
     },
+    // fix BPM (D-23)。シーンを跨いで BPM の表示を見張るので AudioContext を動かす
+    {
+      name: 'fixbpm-chromium',
+      testMatch: /fixbpm\.spec\.js/,
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: { args: ['--autoplay-policy=no-user-gesture-required'] },
+      },
+    },
     // macOS相当。2カラムのデスクトップレイアウト
     {
       name: 'desktop-chromium',
