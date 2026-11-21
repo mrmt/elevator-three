@@ -1,5 +1,7 @@
 # Elevator Three
 
+[![Featured on JevMade](https://jevmade.com/badges/featured-on-jevmade.svg)](https://jevmade.com/e/elevator-three)
+
 自動生成のエレクトロを鳴らし続けるシングルファイルの楽器。
 [elevator-two](https://github.com/mrmt/elevator-two) から分岐し、音楽的な判断を
 TypeSafe の [Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev) に文脈つきで任せて、
